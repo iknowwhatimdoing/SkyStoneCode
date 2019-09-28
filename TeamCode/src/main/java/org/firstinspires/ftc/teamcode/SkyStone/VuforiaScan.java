@@ -63,7 +63,7 @@ public class VuforiaScan extends LinearOpMode {
 
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
-    private static final boolean PHONE_IS_PORTRAIT = false  ;
+    private static final boolean PHONE_IS_PORTRAIT = false;
 
 
     private static final String VUFORIA_KEY =
@@ -96,6 +96,8 @@ public class VuforiaScan extends LinearOpMode {
     private float phoneZRotate    = 0;
 
     @Override public void runOpMode() {
+        telemetry.addLine("Minecraft Rules");
+        telemetry.update();
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
