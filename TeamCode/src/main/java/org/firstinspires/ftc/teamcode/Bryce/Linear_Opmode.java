@@ -99,6 +99,8 @@ public class Linear_Opmode extends LinearOpMode {
 
         while(leftDrive.isBusy()||rightDrive.isBusy()){
 
+            telemetry.addLine("Alek and Bryce are Big Brains");
+            telemetry.update();
         }
         leftDrive.setPower(0);
         rightDrive.setPower(0);
@@ -107,7 +109,6 @@ public class Linear_Opmode extends LinearOpMode {
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
     }
-
 
 
 
