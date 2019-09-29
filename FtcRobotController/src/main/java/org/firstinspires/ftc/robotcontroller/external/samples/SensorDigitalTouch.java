@@ -68,6 +68,7 @@ public class SensorDigitalTouch extends LinearOpMode {
         digitalTouch.setMode(DigitalChannel.Mode.INPUT);
 
         // wait for the start button to be pressed.
+
         waitForStart();
 
         // while the op mode is active, loop and read the light levels.
