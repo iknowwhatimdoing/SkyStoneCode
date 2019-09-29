@@ -15,13 +15,12 @@ public class Bryce extends OpMode {
     DcMotor Arm_Motor;
 
 
-
     @Override
     public void init() {
-        Rear_left_motor=hardwareMap.get(DcMotor.class, "left motor");
-        Rear_right_motor=hardwareMap.get(DcMotor.class, "right motor");
-        Servo_1=hardwareMap.get(Servo.class, "servo");
-        Arm_Motor=hardwareMap.get(DcMotor.class, "arm motor");
+        Rear_left_motor = hardwareMap.get(DcMotor.class, "left motor");
+        Rear_right_motor = hardwareMap.get(DcMotor.class, "right motor");
+        Servo_1 = hardwareMap.get(Servo.class, "servo");
+        Arm_Motor = hardwareMap.get(DcMotor.class, "arm motor");
 
         Rear_right_motor.setDirection(DcMotor.Direction.REVERSE);
 
@@ -30,12 +29,11 @@ public class Bryce extends OpMode {
     @Override
     public void loop() {
 
-        double drive=gamepad1.left_stick_y;
-        double turn=gamepad1.right_stick_x;
+        double drive = gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
 
-        double leftPower=drive+turn;
-        double rightpower=drive-turn;
-
+        double leftPower = drive + turn;
+        double rightpower = drive - turn;
 
 
         Rear_left_motor.setPower(leftPower);
