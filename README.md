@@ -1,4 +1,3 @@
-
 ## Welcome!
 This is the GitHub repository used to store code for the team 14828, the Crypto Cardinals. This
 repository is for version control of the official team code. Any changes to this code will be run
@@ -41,6 +40,11 @@ If you would like to change any of the programs in the SkyStone folder, please m
  * Type in an update message (Say what you change, why you changed it, and your name)in the box labeled commit message
 
  * Click commit at the bottom of the pop-up
+ 
+ * If you see a message telling you that there are no errors, only warning, you should be fine to push the code
+
+* If you see a message that says there are some errors, <b>DO NOT PUSH THE CODE</b>. View the errors and fix them before pushing
+
 
 Once you finish doing all the prior steps, you will need to push the code to GitHub
 
@@ -48,9 +52,6 @@ Once you finish doing all the prior steps, you will need to push the code to Git
 
 * Click Push at the bottom
 
-* If you see a message telling you that there are no errors, only warning, you should be fine to push the code
-
-* If you see a message that says there are some errors, <b>DO NOT PUSH THE CODE</b>. View the errors and fix them before pushing
 
 
 
@@ -61,6 +62,32 @@ If you want to get the latest code that has been pushed by other users, you will
  * Click the blue arrow next to the green check mark
 
  * Click Ok
+ 
+ 
+ ## Merge Pop-up
+ Sometimes after uploading your code and\or when you pull code, a pop-up will ask you about merging documents. If you are uploading the
+ code and get this message, click merge at the bottom of the pop-up. If you are downloading code, look for merge theirs towards the
+ right side, top of the pop-up. If you are ever unsure about what to do when this message occurs, do not hesitate to ask the lead 
+ programmer for help. If you click the wrong thing, you may mess up someone elses code.
+
+
+## Help
+When programming, if you ever come upon an error or message that you don't understand, <b>do not attempt to solve the problem on your own</b>. The only exception is if you are <b>100%</b> confident you know what you are doing, or if you have been told to do so, by the
+ lead programmer, prior. The lead programmer is there to help. If you thing you mave have broken something\messed something up, it is
+  better to tell someone than wait for it to become a bigger problem later.
+  
+  
+## Learning to Progarm
+If you are just starting out programming, there are many helpful things that can teach you how. Some options for learning to program
+ are give below.
+ 
+* Ask the lead programmer or the lead-assistant programmer to teach you
+
+* Look through some of the example code located in the FtcRobotController> java> org.firstinspires.ftc.robotcontroller> external.samples
+
+* Watch some tutorials on YouTue by other FTC teams
+
+* Look through some of the code written by the team
 
 
 ### Authorised users
