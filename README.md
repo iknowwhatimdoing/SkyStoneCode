@@ -67,7 +67,8 @@ If you want to get the latest code that has been pushed by other users, you will
  ## Merge Pop-up
  Sometimes after uploading your code and\or when you pull code, a pop-up will ask you about merging documents. If you are uploading 
  code <b>from your own personal folder</b> and get this message, click merge at the bottom of the pop-up. If you are downloading code, 
- look for 'merge theirs' towards the right side, top of the pop-up. If you are ever unsure about what to do when this message occurs, 
+ look for 'merge theirs' towards the right side, top of the pop-up. <b>This only applies for certain situations. It is best to ask 
+ help if/when this occurs</b>. If you are ever unsure about what to do when this message occurs, 
  do not hesitate to ask the lead programmer for help. If you click the wrong thing, you may mess up someone elses code.
 
 
