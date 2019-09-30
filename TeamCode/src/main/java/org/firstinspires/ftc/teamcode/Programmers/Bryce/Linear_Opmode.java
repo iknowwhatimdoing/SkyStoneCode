@@ -1,6 +1,6 @@
 
 
-package org.firstinspires.ftc.teamcode.Bryce;
+package org.firstinspires.ftc.teamcode.Programmers.Bryce;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
 @TeleOp(name = "Basic: Linear OpMode", group = "Linear Opmode")
