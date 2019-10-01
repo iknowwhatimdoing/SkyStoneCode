@@ -207,15 +207,26 @@ public class VuforiaScan extends LinearOpMode {
         // Tap the preview window to receive a fresh image.
 
         targetsSkyStone.activate();
-        while (!isStopRequested() && !targetVisible) {
+        while (!isStopRequested() && stonesLeft) {
 
 
+            // drive
+            
+            //robto.motor.setPower(.6); etc
+            
             // check all the trackable targets to see which one (if any) is visible.
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
                     telemetry.addData("Visible Target", trackable.getName());
-                    targetVisible = true;
+                    
+                    if(trackable.getName().equals("stoneTarget")){
+                        targetVisible = true;
+
+                        // stop
+                        
+                        //robot.motor.setPower(0);   etc
+                    
 
                     // getUpdatedRobotLocation() will return null if no new information is available since
                     // the last time that call was made, or if the trackable is not currently visible.
@@ -225,10 +236,16 @@ public class VuforiaScan extends LinearOpMode {
                     }
                     break;
                 }
+                }
             }
 
             // Provide feedback as to where the robot is located (if we know).
             if (targetVisible) {
+                
+                //grab it, move it where it goes, come back and start agian
+                
+                targetVisible = false;
+                /*
                 // express position (translation) of robot in inches.
                 VectorF translation = lastLocation.getTranslation();
                 telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
@@ -237,7 +254,8 @@ public class VuforiaScan extends LinearOpMode {
                 // express the rotation of the robot in degrees.
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-            }
+           */
+           }
             else {
                 telemetry.addData("Visible Target", "none");
             }
