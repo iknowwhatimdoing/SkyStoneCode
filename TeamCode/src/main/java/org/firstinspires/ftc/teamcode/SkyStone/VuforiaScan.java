@@ -1,31 +1,4 @@
-/* Copyright (c) 2019 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+//Copyright (c) 2019 FIRST. All rights reserved.
 
 package org.firstinspires.ftc.teamcode.SkyStone;
 
@@ -61,12 +34,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 @TeleOp(name="VuforiaScan")
 public class VuforiaScan extends LinearOpMode {
     
-    private boolean seeStone = false;
-
-
+    private String configuration = "Not Decided";
+    
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
-
 
     private static final String VUFORIA_KEY =
             "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
@@ -207,12 +178,9 @@ public class VuforiaScan extends LinearOpMode {
         // Tap the preview window to receive a fresh image.
 
         targetsSkyStone.activate();
-        while (!isStopRequested() && stonesLeft) {
+        while (!isStopRequested() && configuration == "Not Decided") {
 
 
-            // drive
-            
-            //robto.motor.setPower(.6); etc
             
             // check all the trackable targets to see which one (if any) is visible.
             targetVisible = false;
@@ -220,12 +188,13 @@ public class VuforiaScan extends LinearOpMode {
                 if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
                     telemetry.addData("Visible Target", trackable.getName());
                     
+                    
                     if(trackable.getName().equals("stoneTarget")){
                         targetVisible = true;
 
-                        // stop
-                        
-                        //robot.motor.setPower(0);   etc
+                    }
+
+                       
                     
 
                     // getUpdatedRobotLocation() will return null if no new information is available since
@@ -236,7 +205,7 @@ public class VuforiaScan extends LinearOpMode {
                     }
                     break;
                 }
-                }
+                
             }
 
             // Provide feedback as to where the robot is located (if we know).
@@ -244,8 +213,7 @@ public class VuforiaScan extends LinearOpMode {
                 
                 //grab it, move it where it goes, come back and start agian
                 
-                targetVisible = false;
-                /*
+                
                 // express position (translation) of robot in inches.
                 VectorF translation = lastLocation.getTranslation();
                 telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
@@ -254,7 +222,16 @@ public class VuforiaScan extends LinearOpMode {
                 // express the rotation of the robot in degrees.
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-           */
+           
+                
+            if(translation.get(0) <= leftBound){
+                configuration = "A"; 
+              }else if(translation.get(0) >= leftBound && translation.get(0) <= rightBound){
+                configuration = "B";
+              }else if(translation.get(0) >= rightBound){
+                configuration = "C";
+              }
+
            }
             else {
                 telemetry.addData("Visible Target", "none");
@@ -264,5 +241,80 @@ public class VuforiaScan extends LinearOpMode {
 
         // Disable Tracking when we are done;
         targetsSkyStone.deactivate();
+        
+        
+        // stuff to do when you know the configuration
+        collectionPath();
+        
+        // stuff after collection
+        
+    }
+    
+
+
+    // can be adapted later to collect skyStones from other group of three.
+    private void collectionPath(){
+    
+        switch (configuration){
+        
+            case "A":
+                collectStones("left","middle","right");
+                break;
+                
+            case "B":
+                collectStones("middle","left","right");            
+                break;
+                
+            case "C":
+                collectStones("right","left","middle");
+                break;
+        
+        }
+    
+    }
+    
+    
+    private void collectStones(String first, String second, String third){
+    
+        switch(first){
+        
+            case "left":
+                // stuff to do 
+                break;
+            case "middle":
+                // stuff to do
+                break;
+            case "right":
+                // stuff to do
+                break;
+        }
+        
+        switch(second){
+        
+            case "left":
+                // stuff to do 
+                break;
+            case "middle":
+                // stuff to do
+                break;
+            case "right":
+                // stuff to do
+                break;
+        }
+        
+        switch(third){
+        
+            case "left":
+                // stuff to do 
+                break;
+            case "middle":
+                // stuff to do
+                break;
+            case "right":
+                // stuff to do
+                break;
+        }
+    
+    
     }
 }
