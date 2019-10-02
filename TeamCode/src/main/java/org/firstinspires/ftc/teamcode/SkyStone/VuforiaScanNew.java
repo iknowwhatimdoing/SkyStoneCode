@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.SkyStone;
 
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -33,7 +34,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-@TeleOp(name = "Vuforia Scan Method")
+@Autonomous(name = "Vuforia Scan Method")
 public class VuforiaScanNew extends LinearOpMode {
 
     private String configuration = "Not Decided";
@@ -91,27 +92,20 @@ public class VuforiaScanNew extends LinearOpMode {
         stoneTarget.setName("Stone Target");
 
 
-        // For convenience, gather together all the trackable objects in one easily-iterable collection */
+        // For convenience, gather together all the trackable objects in one easily-iterable collection
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(targetsSkyStone);
 
-        /**
-         * In order for localization to work, we need to tell the system where each target is on the field, and
-         * where the phone resides on the robot.  These specifications are in the form of <em>transformation matrices.</em>
-         * Transformation matrices are a central, important concept in the math here involved in localization.
-         * See <a href="https://en.wikipedia.org/wiki/Transformation_matrix">Transformation Matrix</a>
-         * for detailed information. Commonly, you'll encounter transformation matrices as instances
-         * of the {@link OpenGLMatrix} class.
-         *
-         * If you are standing in the Red Alliance Station looking towards the center of the field,
-         *     - The X axis runs from your left to the right. (positive from the center to the right)
-         *     - The Y axis runs from the Red Alliance Station towards the other side of the field
-         *       where the Blue Alliance Station is. (Positive is from the center, towards the BlueAlliance station)
-         *     - The Z axis runs from the floor, upwards towards the ceiling.  (Positive is above the floor)
-         *
-         * Before being transformed, each target image is conceptually located at the origin of the field's
-         *  coordinate system (the center of the field), facing up.
-         */
+
+        // If you are standing in the Red Alliance Station looking towards the center of the field,
+        //    - The X axis runs from your left to the right. (positive from the center to the right)
+        //    - The Y axis runs from the Red Alliance Station towards the other side of the field
+        //      where the Blue Alliance Station is. (Positive is from the center, towards the BlueAlliance station)
+        //    - The Z axis runs from the floor, upwards towards the ceiling.  (Positive is above the floor)
+        //
+        //Before being transformed, each target image is conceptually located at the origin of the field's
+        //  coordinate system (the center of the field), facing up.
+        //
 
         // Set the position of the Stone Target.  Since it's not fixed in position, assume it's at the field origin.
         // Rotated it to to face forward, and raised it to sit on the ground correctly.
@@ -121,14 +115,7 @@ public class VuforiaScanNew extends LinearOpMode {
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
 
-        // Create a transformation matrix describing where the phone is on the robot.
-        //
-        // NOTE !!!!  It's very important that you turn OFF your phone's Auto-Screen-Rotation option.
-        // Lock it into Portrait for these numbers to work.
-        //
-        // Info:  The coordinate frame for the robot looks the same as the field.
-        // The robot's "forward" direction is facing out along X axis, with the LEFT side facing out along the Y axis.
-        // Z is UP on the robot.  This equates to a bearing angle of Zero degrees.
+        // Lock screen in portrait mode
         //
         // The phone starts out lying flat, with the screen facing Up and with the physical top of the phone
         // pointing to the LEFT side of the Robot.
@@ -146,7 +133,7 @@ public class VuforiaScanNew extends LinearOpMode {
             phoneXRotate = 90;
         }
 
-        // Next, translate the camera lens to where it is on the robot.
+
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
         final float CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
@@ -156,7 +143,7 @@ public class VuforiaScanNew extends LinearOpMode {
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
 
-        /**  Let all the trackable listeners know where the phone is.  */
+
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(robotFromCamera, parameters.cameraDirection);
         }
@@ -167,32 +154,49 @@ public class VuforiaScanNew extends LinearOpMode {
 
         waitForStart();
 
-        /*
-            initDetector();
-            findFoundation();
-            if(detector != null) detector.disable();
-            //drive around, move foundation, etc
+
+        initDetector();
+        findFoundation();
+        if (detector != null) detector.disable();
+
+        //drive around, move foundation, etc
 
 
-        */
+        //scan(targetsSkyStone, allTrackables);
 
-
-        scan(targetsSkyStone, allTrackables);
-
-        telemetry.addLine("Here");
-        telemetry.update();
 
         // Disable Tracking when we are done;
-        targetsSkyStone.deactivate();
+        //targetsSkyStone.deactivate();
 
 
         // stuff to do when you know the configuration
-        collectionPath();
+        //collectionPath();
 
         // stuff after collection
 
 
     }
+
+
+
+
+
+
+    /*-------------------------------------------------
+    *
+    * Methods
+    *
+    * --------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
 
     public void initDetector() {
         telemetry.addData("Status", "DogeCV 2019.1 - Gold Align Example");
@@ -203,7 +207,7 @@ public class VuforiaScanNew extends LinearOpMode {
         detector.useDefaults(); // Set detector to use default settings
 
         // Optional tuning
-        detector.alignSize = 100; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+        detector.alignSize = 200; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
         detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
         detector.downscale = 0.4; // How much to downscale the input frames
 
