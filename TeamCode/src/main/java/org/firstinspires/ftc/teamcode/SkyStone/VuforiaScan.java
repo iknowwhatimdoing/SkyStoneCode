@@ -59,6 +59,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 
 @TeleOp(name="VuforiaScan")
+@Disabled
 public class VuforiaScan extends LinearOpMode {
 
 

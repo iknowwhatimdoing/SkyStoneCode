@@ -2,6 +2,8 @@
 
 package org.firstinspires.ftc.teamcode.SkyStone;
 
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.DogeCV;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -19,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.SkyStone.Detectors.FoundationDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +33,13 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-
-
-@TeleOp(name="Vuforia Scan Method")
+@TeleOp(name = "Vuforia Scan Method")
 public class VuforiaScanNew extends LinearOpMode {
 
     private String configuration = "Not Decided";
+
+    private FoundationDetector detector;
+
 
     private static final double leftBound = 0;
     private static final double rightBound = 0;
@@ -47,7 +51,7 @@ public class VuforiaScanNew extends LinearOpMode {
             "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
 
 
-    private static final float mmPerInch        = 25.4f;
+    private static final float mmPerInch = 25.4f;
 
     // Constant for Stone Target
     private static final float stoneZ = 2.00f * mmPerInch;
@@ -57,11 +61,12 @@ public class VuforiaScanNew extends LinearOpMode {
     private OpenGLMatrix lastLocation = null;
     private VuforiaLocalizer vuforia = null;
     private boolean targetVisible = false;
-    private float phoneXRotate    = 0;
-    private float phoneYRotate    = 0;
-    private float phoneZRotate    = 0;
+    private float phoneXRotate = 0;
+    private float phoneYRotate = 0;
+    private float phoneZRotate = 0;
 
-    @Override public void runOpMode() {
+    @Override
+    public void runOpMode() {
 
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -70,7 +75,7 @@ public class VuforiaScanNew extends LinearOpMode {
         // VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection   = CAMERA_CHOICE;
+        parameters.cameraDirection = CAMERA_CHOICE;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -79,7 +84,7 @@ public class VuforiaScanNew extends LinearOpMode {
         // sets are stored in the 'assets' part of our application.
         VuforiaTrackables targetsSkyStone = this.vuforia.loadTrackablesFromAsset("Skystone");
 
-        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS,3);
+        Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 3);
 
 
         VuforiaTrackable stoneTarget = targetsSkyStone.get(0);
@@ -138,14 +143,14 @@ public class VuforiaScanNew extends LinearOpMode {
 
         // Rotate the phone vertical about the X axis if it's in portrait mode
         if (PHONE_IS_PORTRAIT) {
-            phoneXRotate = 90 ;
+            phoneXRotate = 90;
         }
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT  = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
+        final float CAMERA_LEFT_DISPLACEMENT = 0;     // eg: Camera is ON the robot's center line
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -157,11 +162,19 @@ public class VuforiaScanNew extends LinearOpMode {
         }
 
 
+        //targetsSkyStone.deactivate();
+
 
         waitForStart();
 
+        /*
+            initDetector();
+            findFoundation();
+            if(detector != null) detector.disable();
+            //drive around, move foundation, etc
 
-        //drive around, move foundation, etc
+
+        */
 
 
         scan(targetsSkyStone, allTrackables);
@@ -178,10 +191,46 @@ public class VuforiaScanNew extends LinearOpMode {
 
         // stuff after collection
 
+
+    }
+
+    public void initDetector() {
+        telemetry.addData("Status", "DogeCV 2019.1 - Gold Align Example");
+
+        // Set up detector
+        detector = new FoundationDetector(); // Create detector
+        detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
+        detector.useDefaults(); // Set detector to use default settings
+
+        // Optional tuning
+        detector.alignSize = 100; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+        detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
+        detector.downscale = 0.4; // How much to downscale the input frames
+
+        detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
+        //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
+        detector.maxAreaScorer.weight = 0.005; //
+
+        detector.ratioScorer.weight = 5; //
+        detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
+
+        detector.enable(); // Start the detector!
+
+
     }
 
 
-    private void scan(VuforiaTrackables targetsSkyStone, List<VuforiaTrackable> allTrackables){
+    private void findFoundation() {
+
+        while (!isStopRequested()) {
+            telemetry.addData("IsAligned", detector.getAligned()); // Is the bot aligned with the gold mineral?
+            telemetry.addData("X Pos", detector.getXPosition()); // Gold X position.
+            telemetry.update();
+        }
+    }
+
+
+    private void scan(VuforiaTrackables targetsSkyStone, List<VuforiaTrackable> allTrackables) {
 
         CameraDevice.getInstance().setFlashTorchMode(true);
 
@@ -193,30 +242,29 @@ public class VuforiaScanNew extends LinearOpMode {
         while (!isStopRequested() && configuration == "Not Decided") {
 
 
-
             // check all the trackable targets to see which one (if any) is visible.
             targetVisible = false;
-            while(!isStopRequested() && !targetVisible){
-            for (VuforiaTrackable trackable : allTrackables) {
-                if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                    telemetry.addData("Visible Target", trackable.getName());
+            while (!isStopRequested() && !targetVisible) {
+                for (VuforiaTrackable trackable : allTrackables) {
+                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                        telemetry.addData("Visible Target", trackable.getName());
 
 
-                    if (trackable.getName().equals("Stone Target")) {
-                        targetVisible = true;
+                        if (trackable.getName().equals("Stone Target")) {
+                            targetVisible = true;
 
+                        }
+
+
+                        // getUpdatedRobotLocation() will return null if no new information is available since
+                        // the last time that call was made, or if the trackable is not currently visible.
+                        OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                        if (robotLocationTransform != null) {
+                            lastLocation = robotLocationTransform;
+                        }
+                        break;
                     }
-
-
-                    // getUpdatedRobotLocation() will return null if no new information is available since
-                    // the last time that call was made, or if the trackable is not currently visible.
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                    if (robotLocationTransform != null) {
-                        lastLocation = robotLocationTransform;
-                    }
-                    break;
                 }
-            }
 
             }
 
@@ -228,9 +276,7 @@ public class VuforiaScanNew extends LinearOpMode {
                 VectorF translation = lastLocation.getTranslation();
 
                 ElapsedTime timer = new ElapsedTime();
-                while(!isStopRequested() && timer.seconds() < 8) {
-
-
+                while (!isStopRequested() && timer.seconds() < 8) {
 
 
                     translation = lastLocation.getTranslation();
@@ -246,20 +292,18 @@ public class VuforiaScanNew extends LinearOpMode {
                 }
 
 
-
-                if(translation.get(0) <= leftBound){
+                if (translation.get(0) <= leftBound) {
                     configuration = "A";
                     telemetry.addLine("Patter A");
-                }else if(translation.get(0) >= leftBound && translation.get(0) <= rightBound){
+                } else if (translation.get(0) >= leftBound && translation.get(0) <= rightBound) {
                     configuration = "B";
                     telemetry.addLine("Patter B");
-                }else if(translation.get(0) >= rightBound){
+                } else if (translation.get(0) >= rightBound) {
                     configuration = "C";
                     telemetry.addLine("Patter C");
                 }
 
-            }
-            else {
+            } else {
                 telemetry.addData("Visible Target", "none");
             }
             telemetry.update();
@@ -270,20 +314,20 @@ public class VuforiaScanNew extends LinearOpMode {
 
 
     // can be adapted later to collect skyStones from other group of three.
-    private void collectionPath(){
+    private void collectionPath() {
 
-        switch (configuration){
+        switch (configuration) {
 
             case "A":
-                collectStones("left","middle","right");
+                collectStones("left", "middle", "right");
                 break;
 
             case "B":
-                collectStones("middle","left","right");
+                collectStones("middle", "left", "right");
                 break;
 
             case "C":
-                collectStones("right","left","middle");
+                collectStones("right", "left", "middle");
                 break;
 
         }
@@ -291,22 +335,9 @@ public class VuforiaScanNew extends LinearOpMode {
     }
 
 
-    private void collectStones(String first, String second, String third){
+    private void collectStones(String first, String second, String third) {
 
-        switch(first){
-
-            case "left":
-                // stuff to do
-                break;
-            case "middle":
-                // stuff to do
-                break;
-            case "right":
-                // stuff to do
-                break;
-        }
-
-        switch(second){
+        switch (first) {
 
             case "left":
                 // stuff to do
@@ -319,7 +350,20 @@ public class VuforiaScanNew extends LinearOpMode {
                 break;
         }
 
-        switch(third){
+        switch (second) {
+
+            case "left":
+                // stuff to do
+                break;
+            case "middle":
+                // stuff to do
+                break;
+            case "right":
+                // stuff to do
+                break;
+        }
+
+        switch (third) {
 
             case "left":
                 // stuff to do
