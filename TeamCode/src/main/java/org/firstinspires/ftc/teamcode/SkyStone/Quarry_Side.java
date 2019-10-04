@@ -6,6 +6,7 @@ import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.CameraDevice;
 import com.vuforia.HINT;
@@ -32,7 +33,18 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 
 @Autonomous(name = "Vuforia Scan Method")
-public class VuforiaScanNew extends LinearOpMode {
+public class Quarry_Side extends LinearOpMode {
+
+    SkyStoneHardware robot = new SkyStoneHardware();
+
+
+    private ElapsedTime runtime = new ElapsedTime();
+
+    static final double COUNTS_PER_MOTOR_REV = 2786;
+    static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 4.0;
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
+
 
     private String configuration = "Not Decided";
 
@@ -66,30 +78,24 @@ public class VuforiaScanNew extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        robot.init(hardwareMap);
+
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
-
         // VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection = CAMERA_CHOICE;
 
-        //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Load the data sets for the trackable objects. These particular data
-        // sets are stored in the 'assets' part of our application.
         VuforiaTrackables targetsSkyStone = this.vuforia.loadTrackablesFromAsset("Skystone");
-
         Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 3);
 
 
         VuforiaTrackable stoneTarget = targetsSkyStone.get(0);
         stoneTarget.setName("Stone Target");
 
-
-        // For convenience, gather together all the trackable objects in one easily-iterable collection
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(targetsSkyStone);
 
@@ -104,7 +110,6 @@ public class VuforiaScanNew extends LinearOpMode {
         //  coordinate system (the center of the field), facing up.
         //
 
-
         stoneTarget.setLocation(OpenGLMatrix
                 .translation(0, 0, stoneZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
@@ -114,25 +119,23 @@ public class VuforiaScanNew extends LinearOpMode {
         //
         // The phone starts out lying flat, with the screen facing Up and with the physical top of the phone
         // pointing to the LEFT side of the Robot.
-        // The two examples below assume that the camera is facing forward out the front of the robot.
 
-        // We need to rotate the camera around it's long axis to bring the correct camera forward.
+        // Rotate to say the camera is facing outward on side
         if (CAMERA_CHOICE == BACK) {
             phoneYRotate = -90;
         } else {
             phoneYRotate = 90;
         }
 
-        // Rotate the phone vertical about the X axis if it's in portrait mode
+        // Rotate the phone vertical if in portrait
         if (PHONE_IS_PORTRAIT) {
             phoneXRotate = 90;
         }
 
 
-        // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
-        final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT = 0;     // eg: Camera is ON the robot's center line
+        final float CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch;   // Inches in front of the robot's center
+        final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // Inches off the ground
+        final float CAMERA_LEFT_DISPLACEMENT = 0;     // Inches displaced. Negative = off center to the left
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -178,19 +181,43 @@ public class VuforiaScanNew extends LinearOpMode {
 
 
     /*-------------------------------------------------
-    *
-    * Methods
-    *
-    * --------------------------------------------------*/
+     *
+     * Methods
+     *
+     * --------------------------------------------------*/
 
 
 
 
 
+    public void moveDistanvePID(double speed, double distance) {
 
 
+        double targetPosition = (int)(distance * COUNTS_PER_INCH);
+        double intergral = 0;
+        double iteratoins = 0;
+        ElapsedTime timer = new ElapsedTime();
+
+        double error = robot.leftfront.getCurrentPosition() - targetPosition;
+        double lastError = 0;
+        double Kp = 0.01;
+        double Ki = 0.008;
+        double Kd = 0.008;
+
+        while (opModeIsActive() && Math.abs(error) <= 5) {
+            error = robot.leftfront.getCurrentPosition() - targetPosition;
+            double deltaError = lastError - error;
+            intergral += deltaError * timer.time();
+            double derivative = deltaError / timer.time();
+            robot.driveAll(Kp * error + Ki * intergral + Kd + derivative);
+            error = lastError;
+            iteratoins++;
+            timer.reset();
+
+        }
 
 
+    }
 
 
     public void initDetector() {
