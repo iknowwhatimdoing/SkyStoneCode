@@ -103,4 +103,3 @@ public class Encoder_Movement_Examples extends LinearOpMode {
 
 }
 
-"memes"
