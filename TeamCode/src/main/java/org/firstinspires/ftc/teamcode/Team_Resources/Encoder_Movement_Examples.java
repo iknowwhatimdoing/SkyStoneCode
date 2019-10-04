@@ -98,8 +98,9 @@ public class Encoder_Movement_Examples extends LinearOpMode {
 
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
     }
 
 
 }
+
+"memes"
