@@ -23,7 +23,7 @@ import java.util.List;
  * Created by Victo on 9/17/2018.
  */
 
-public class FoundationDetector extends DogeCVDetector {
+public class RedFoundationDetector extends DogeCVDetector {
 
     // Defining Mats to be used.
     private Mat displayMat = new Mat(); // Display debug info to the screen (this is what is returned)
@@ -55,7 +55,7 @@ public class FoundationDetector extends DogeCVDetector {
     /**
      * Simple constructor
      */
-    public FoundationDetector() {
+    public RedFoundationDetector() {
         super();
         detectorName = "Foundation Align Detector"; // Set the detector name
     }
