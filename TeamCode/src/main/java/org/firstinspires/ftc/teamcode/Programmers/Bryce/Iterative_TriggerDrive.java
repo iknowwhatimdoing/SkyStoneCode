@@ -50,8 +50,8 @@ public class Iterative_TriggerDrive extends OpMode
         double leftPower;
         double rightPower;
 
-        leftPower = gamepad1.left_trigger + rightDrive;
-        rightPower = gamepad1.right_trigger - rightDrive;
+        leftPower = gamepad1.right_trigger + gamepad1.left_trigger;
+        rightPower = gamepad1.right_trigger - gamepad1.left_trigger;
 
 
         leftDrive.setPower(leftPower);
