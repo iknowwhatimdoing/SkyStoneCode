@@ -35,7 +35,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.SkyStone.Detectors.FoundationDetector;
+import org.firstinspires.ftc.teamcode.SkyStone.Detectors.RedFoundationDetector;
 
 
 @TeleOp(name="Gold Align Example", group="DogeCV")
@@ -43,7 +43,7 @@ import org.firstinspires.ftc.teamcode.SkyStone.Detectors.FoundationDetector;
 public class GoldAlignExample extends OpMode
 {
     // Detector object
-    private FoundationDetector detector;
+    private RedFoundationDetector detector;
 
 
     @Override
@@ -51,7 +51,7 @@ public class GoldAlignExample extends OpMode
         telemetry.addData("Status", "DogeCV 2019.1 - Gold Align Example");
 
         // Set up detector
-        detector = new FoundationDetector(); // Create detector
+        detector = new RedFoundationDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
         detector.useDefaults(); // Set detector to use default settings
 

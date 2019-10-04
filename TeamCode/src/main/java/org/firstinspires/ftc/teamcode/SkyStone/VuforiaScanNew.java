@@ -5,16 +5,13 @@ package org.firstinspires.ftc.teamcode.SkyStone;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.CameraDevice;
 import com.vuforia.HINT;
 import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -22,7 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.SkyStone.Detectors.FoundationDetector;
+import org.firstinspires.ftc.teamcode.SkyStone.Detectors.RedFoundationDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +36,7 @@ public class VuforiaScanNew extends LinearOpMode {
 
     private String configuration = "Not Decided";
 
-    private FoundationDetector detector;
+    private RedFoundationDetector detector;
 
 
     private static final double leftBound = 0;
@@ -200,7 +197,7 @@ public class VuforiaScanNew extends LinearOpMode {
         telemetry.addData("Status", "DogeCV 2019.1 - Gold Align Example");
 
         // Set up detector
-        detector = new FoundationDetector(); // Create detector
+        detector = new RedFoundationDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
         detector.useDefaults(); // Set detector to use default settings
 
