@@ -34,8 +34,8 @@ public class RedFoundationDetector extends DogeCVDetector {
     // Results of the detector
     private boolean found    = false; // Is the gold mineral found
     private boolean aligned  = false; // Is the gold mineral aligned
-    private double  goldXPos = 0;     // X Position (in pixels) of the gold element
-    private double  goldYPos = 0;     // Y Position (in pixels) of the gold element
+    private double  foundationXPos = 0;     // X Position (in pixels) of the gold element
+    private double  foundationYPos = 0;     // Y Position (in pixels) of the gold element
 
     // Detector settings
     public boolean debugAlignment = true; // Show debug lines to show alignment settings
@@ -114,8 +114,8 @@ public class RedFoundationDetector extends DogeCVDetector {
             // Set align X pos
             xPos = bestRect.x + (bestRect.width / 2);
             yPos = bestRect.y + (bestRect.height / 2);
-            goldXPos = xPos;
-            goldYPos = yPos;
+            foundationXPos = xPos;
+            foundationYPos = yPos;
 
             // Draw center point
             Imgproc.circle(displayMat, new Point( xPos, bestRect.y + (bestRect.height / 2)), 5, new Scalar(0,255,0),2);
@@ -138,7 +138,7 @@ public class RedFoundationDetector extends DogeCVDetector {
 
             //Draw debug alignment info
             if(isFound()){
-                Imgproc.line(displayMat,new Point(goldXPos, getAdjustedSize().height), new Point(goldXPos, getAdjustedSize().height - 30),new Scalar(255,255,0), 2);
+                Imgproc.line(displayMat,new Point(foundationXPos, getAdjustedSize().height), new Point(foundationXPos, getAdjustedSize().height - 30),new Scalar(255,255,0), 2);
             }
 
             Imgproc.line(displayMat,new Point(alignXMin, getAdjustedSize().height), new Point(alignXMin, getAdjustedSize().height - 40),new Scalar(0,255,0), 2);
@@ -191,7 +191,7 @@ public class RedFoundationDetector extends DogeCVDetector {
      * @return last x-position in screen pixels of gold element
      */
     public double getXPosition(){
-        return goldXPos;
+        return foundationXPos;
     }
 
 
@@ -200,7 +200,7 @@ public class RedFoundationDetector extends DogeCVDetector {
      * @return last y-position in screen pixels of gold element
      */
     public double getYPosition(){
-        return goldYPos;
+        return foundationYPos;
     }
 
     /**

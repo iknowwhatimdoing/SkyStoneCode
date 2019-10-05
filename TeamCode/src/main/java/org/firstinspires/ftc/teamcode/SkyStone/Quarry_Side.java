@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 import com.vuforia.CameraDevice;
 import com.vuforia.HINT;
 import com.vuforia.Vuforia;
@@ -38,8 +39,7 @@ public class Quarry_Side extends LinearOpMode {
     SkyStoneHardware robot = new SkyStoneHardware();
 
 
-    private ElapsedTime runtime = new ElapsedTime();
-
+    //drive by encoders math
     static final double COUNTS_PER_MOTOR_REV = 2786;
     static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;
@@ -47,12 +47,11 @@ public class Quarry_Side extends LinearOpMode {
 
 
     private String configuration = "Not Decided";
-
+    private int stonesLeft = 3;
     private RedFoundationDetector detector;
 
 
-    private static final double leftBound = 0;
-    private static final double rightBound = 0;
+    private static final double middleBound = 0;
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
@@ -60,12 +59,9 @@ public class Quarry_Side extends LinearOpMode {
     private static final String VUFORIA_KEY =
             "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
 
-
     private static final float mmPerInch = 25.4f;
-
-    // Constant for Stone Target
+    // Constant for Stone target
     private static final float stoneZ = 2.00f * mmPerInch;
-
 
     // Class Members
     private OpenGLMatrix lastLocation = null;
@@ -147,34 +143,19 @@ public class Quarry_Side extends LinearOpMode {
         }
 
 
-        //targetsSkyStone.deactivate();
-
-
         waitForStart();
 
 
-        initDetector();
-        findFoundation();
-        if (detector != null) detector.disable();
-
-        //drive around, move foundation, etc
+        //scan the stones
+        scan(targetsSkyStone, allTrackables);
+        targetsSkyStone.deactivate();
 
 
-        //scan(targetsSkyStone, allTrackables);
+        collectionPath();
 
-
-        // Disable Tracking when we are done;
-        //targetsSkyStone.deactivate();
-
-
-        // stuff to do when you know the configuration
-        //collectionPath();
-
-        // stuff after collection
-
+        //park on the middle line
 
     }
-
 
 
 
@@ -187,13 +168,10 @@ public class Quarry_Side extends LinearOpMode {
      * --------------------------------------------------*/
 
 
+    public void moveDistanvePID(double speed, double inches) {
 
 
-
-    public void moveDistanvePID(double speed, double distance) {
-
-
-        double targetPosition = (int)(distance * COUNTS_PER_INCH);
+        double targetPosition = (int) (inches * COUNTS_PER_INCH);
         double intergral = 0;
         double iteratoins = 0;
         ElapsedTime timer = new ElapsedTime();
@@ -209,7 +187,7 @@ public class Quarry_Side extends LinearOpMode {
             double deltaError = lastError - error;
             intergral += deltaError * timer.time();
             double derivative = deltaError / timer.time();
-            robot.driveAll(Kp * error + Ki * intergral + Kd + derivative);
+            robot.driveAll(Range.clip(Kp * error + Ki * intergral + Kd + derivative,-speed,speed));
             error = lastError;
             iteratoins++;
             timer.reset();
@@ -302,6 +280,9 @@ public class Quarry_Side extends LinearOpMode {
                 VectorF translation = lastLocation.getTranslation();
 
                 ElapsedTime timer = new ElapsedTime();
+                double xposition = 0;
+                double iterations = 0;
+
                 while (!isStopRequested() && timer.seconds() < 8) {
 
 
@@ -315,22 +296,25 @@ public class Quarry_Side extends LinearOpMode {
                     telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
 
                     telemetry.update();
+
+                    xposition += translation.get(0);
+                    iterations++;
+
                 }
 
+                double finalXPos = xposition / iterations;
 
-                if (translation.get(0) <= leftBound) {
+
+                if (finalXPos <= middleBound) {
                     configuration = "A";
-                    telemetry.addLine("Patter A");
-                } else if (translation.get(0) >= leftBound && translation.get(0) <= rightBound) {
+                    telemetry.addLine("Pattern A");
+                } else if (finalXPos >= middleBound) {
                     configuration = "B";
-                    telemetry.addLine("Patter B");
-                } else if (translation.get(0) >= rightBound) {
-                    configuration = "C";
-                    telemetry.addLine("Patter C");
+                    telemetry.addLine("Pattern B");
                 }
-
             } else {
-                telemetry.addData("Visible Target", "none");
+                configuration = "C";
+                telemetry.addLine("Pattern C");
             }
             telemetry.update();
         }
@@ -345,63 +329,84 @@ public class Quarry_Side extends LinearOpMode {
         switch (configuration) {
 
             case "A":
-                collectStones("left", "middle", "right");
+                collectLeft();
+                collectMiddle();
+                collectRight();
                 break;
 
             case "B":
-                collectStones("middle", "left", "right");
+                collectMiddle();
+                collectLeft();
+                collectRight();
                 break;
 
             case "C":
-                collectStones("right", "left", "middle");
+                collectRight();
+                collectLeft();
+                collectMiddle();
                 break;
 
         }
 
     }
 
+    private void collectLeft() {
+        // grab the stone
+        grabStone("left");
+        // drive over to where the foundation is
 
-    private void collectStones(String first, String second, String third) {
+        // find an accurate position and drive to it
+        initDetector();
+        findFoundation();
+        if (detector != null) detector.disable();
 
-        switch (first) {
+        // drive over and place the stone
 
-            case "left":
-                // stuff to do
-                break;
-            case "middle":
-                // stuff to do
-                break;
-            case "right":
-                // stuff to do
-                break;
-        }
-
-        switch (second) {
-
-            case "left":
-                // stuff to do
-                break;
-            case "middle":
-                // stuff to do
-                break;
-            case "right":
-                // stuff to do
-                break;
-        }
-
-        switch (third) {
-
-            case "left":
-                // stuff to do
-                break;
-            case "middle":
-                // stuff to do
-                break;
-            case "right":
-                // stuff to do
-                break;
-        }
-
-
+        // go to a homing position
     }
+
+    private void collectMiddle() {
+        // grab the stone
+        // drive over to where the foundation is
+
+        // find an accurate position and drive to it
+        initDetector();
+        findFoundation();
+        if (detector != null) detector.disable();
+
+        // drive over and place the stone
+
+        // go to a homing position
+    }
+
+    private void collectRight() {
+        // grab the stone
+        // drive over to where the foundation is
+
+        // find an accurate position and drive to it
+        initDetector();
+        findFoundation();
+        if (detector != null) detector.disable();
+
+        // drive over and place the stone
+
+        // go to a homing position
+    }
+
+    private void grabStone(String position){
+
+        //drive forward
+        moveDistanvePID(.5, 30);
+
+        if (position == "left"){
+            //drive sideways left
+        }else if (position == "middle"){
+            //drive sideways to align
+        }else if (position == "right"){
+            //drive sideways right
+        }
+
+        // grab it
+    }
+
 }
