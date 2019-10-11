@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.SkyStone;
 
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
+import com.disnodeteam.dogecv.detectors.GenericDetector;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -33,10 +34,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-@Autonomous(name = "Vuforia Scan Method")
+@Autonomous(name = "Vuforia Scan Quarry")
 public class Quarry_Side extends LinearOpMode {
 
-    SkyStoneHardware robot = new SkyStoneHardware();
+    //SkyStoneHardware robot = new SkyStoneHardware();
 
 
     //drive by encoders math
@@ -54,7 +55,7 @@ public class Quarry_Side extends LinearOpMode {
     private static final double middleBound = 0;
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
-    private static final boolean PHONE_IS_PORTRAIT = false;
+    private static final boolean PHONE_IS_PORTRAIT = true;
 
     private static final String VUFORIA_KEY =
             "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
@@ -74,7 +75,7 @@ public class Quarry_Side extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        robot.init(hardwareMap);
+        //robot.init(hardwareMap);
 
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -148,10 +149,10 @@ public class Quarry_Side extends LinearOpMode {
 
         //scan the stones
         scan(targetsSkyStone, allTrackables);
-        targetsSkyStone.deactivate();
+        //targetsSkyStone.deactivate();
 
 
-        collectionPath();
+        //collectionPath();
 
         //park on the middle line
 
@@ -167,7 +168,7 @@ public class Quarry_Side extends LinearOpMode {
      *
      * --------------------------------------------------*/
 
-
+/*
     public void moveDistanvePID(double speed, double inches) {
 
 
@@ -196,6 +197,8 @@ public class Quarry_Side extends LinearOpMode {
 
 
     }
+
+ */
 
 
     public void initDetector() {
@@ -248,7 +251,9 @@ public class Quarry_Side extends LinearOpMode {
 
             // check all the trackable targets to see which one (if any) is visible.
             targetVisible = false;
-            while (!isStopRequested() && !targetVisible) {
+            ElapsedTime waitToSeeTarget = new ElapsedTime();
+
+            while (!isStopRequested() && !targetVisible && waitToSeeTarget.seconds() < 2) {
                 for (VuforiaTrackable trackable : allTrackables) {
                     if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                         telemetry.addData("Visible Target", trackable.getName());
@@ -275,7 +280,8 @@ public class Quarry_Side extends LinearOpMode {
             // Provide feedback as to where the robot is located (if we know).
             if (targetVisible) {
 
-                //grab it, move it where it goes, come back and start agian
+
+                //drive up to it
 
                 VectorF translation = lastLocation.getTranslation();
 
@@ -283,7 +289,6 @@ public class Quarry_Side extends LinearOpMode {
                 double xposition = 0;
                 double iterations = 0;
 
-                while (!isStopRequested() && timer.seconds() < 8) {
 
 
                     translation = lastLocation.getTranslation();
@@ -297,18 +302,19 @@ public class Quarry_Side extends LinearOpMode {
 
                     telemetry.update();
 
-                    xposition += translation.get(0);
-                    iterations++;
-
-                }
-
-                double finalXPos = xposition / iterations;
 
 
-                if (finalXPos <= middleBound) {
+
+
+                telemetry.addData("x: ",translation.get(1)/mmPerInch);
+                telemetry.update();
+                sleep(2000);
+
+
+                if (translation.get(1)/mmPerInch <= middleBound) {
                     configuration = "A";
                     telemetry.addLine("Pattern A");
-                } else if (finalXPos >= middleBound) {
+                } else if (translation.get(1)/mmPerInch >= middleBound) {
                     configuration = "B";
                     telemetry.addLine("Pattern B");
                 }
@@ -396,7 +402,7 @@ public class Quarry_Side extends LinearOpMode {
     private void grabStone(String position){
 
         //drive forward
-        moveDistanvePID(.5, 30);
+        //moveDistanvePID(.5, 30);
 
         if (position == "left"){
             //drive sideways left

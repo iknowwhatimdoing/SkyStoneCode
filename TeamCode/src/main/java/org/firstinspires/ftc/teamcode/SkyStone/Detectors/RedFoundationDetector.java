@@ -31,6 +31,7 @@ public class RedFoundationDetector extends DogeCVDetector {
     private Mat maskYellow = new Mat(); // Yellow Mask returned by color filter
     private Mat hierarchy  = new Mat(); // hierarchy used by contours
 
+
     // Results of the detector
     private boolean found    = false; // Is the gold mineral found
     private boolean aligned  = false; // Is the gold mineral aligned

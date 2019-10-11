@@ -18,8 +18,8 @@ public class Bryce__OutReachDrive extends OpMode {
     public void init() {
         Rear_left_motor = hardwareMap.get(DcMotor.class, "left motor");
         Rear_right_motor = hardwareMap.get(DcMotor.class, "right motor");
-        Servo_1 = hardwareMap.get(Servo.class, "servo");
-        Arm_Motor = hardwareMap.get(DcMotor.class, "arm motor");
+        //Servo_1 = hardwareMap.get(Servo.class, "servo");
+        //Arm_Motor = hardwareMap.get(DcMotor.class, "arm motor");
 
         Rear_right_motor.setDirection(DcMotor.Direction.REVERSE);
 

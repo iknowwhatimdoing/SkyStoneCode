@@ -31,7 +31,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-@Autonomous(name = "Vuforia Scan Method")
+@Autonomous(name = "Vuforia Scan Foundation")
 public class Foundation_Side extends LinearOpMode {
 
     private String configuration = "Not Decided";

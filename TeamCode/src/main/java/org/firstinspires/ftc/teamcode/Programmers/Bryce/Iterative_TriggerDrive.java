@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="Iterative OpMode", group="Iterative Opmode")
-@Disabled
+//@Disabled
 public class Iterative_TriggerDrive extends OpMode
 {
 

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @TeleOp(name = "Basic: Linear OpMode", group = "Linear Opmode")
-@Disabled
+//@Disabled
 public class Linear_Opmode extends LinearOpMode {
 
     // Declare OpMode members.
@@ -33,17 +34,17 @@ public class Linear_Opmode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive = hardwareMap.get(DcMotor.class, "left_drive");
-        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
-        drop = hardwareMap.get(DcMotor.class, "drop");
-        drop_pin = hardwareMap.get(Servo.class, "drop_pin");
-        Range_Boy = hardwareMap.get(DistanceSensor.class, "Range_Boy");
-        Touchy_Boy = hardwareMap.get(DigitalChannel.class, "Touchy_Boy");
-        Touchy_Boy.setMode(DigitalChannel.Mode.INPUT);
+        leftDrive = hardwareMap.get(DcMotor.class, "left motor");
+        rightDrive = hardwareMap.get(DcMotor.class, "right motor");
+        //drop = hardwareMap.get(DcMotor.class, "drop");
+        //drop_pin = hardwareMap.get(Servo.class, "drop_pin");
+        //Range_Boy = hardwareMap.get(DistanceSensor.class, "Range_Boy");
+        //Touchy_Boy = hardwareMap.get(DigitalChannel.class, "Touchy_Boy");
+        //Touchy_Boy.setMode(DigitalChannel.Mode.INPUT);
 
 
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -53,9 +54,14 @@ public class Linear_Opmode extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        Movement(0.5, 50);
-        Movement(1,2000);
-        Movement(0.5,-6000);
+        Movement2(0.5, 200);
+
+
+        while(opModeIsActive()){
+
+            telemetry.addData("encoder: ", leftDrive.getCurrentPosition());
+            telemetry.update();
+        }
 
 
 
@@ -64,15 +70,21 @@ public class Linear_Opmode extends LinearOpMode {
 
     public void  Movement(double Power,double drive){
 
+        int go = 0;
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        while(Math.abs(leftDrive.getCurrentPosition() - drive) >= 5 ) {
+        while(opModeIsActive() && Math.abs(leftDrive.getCurrentPosition() - drive) >= 5 ) {
 
 
-            leftDrive.setPower(Power);
-            rightDrive.setPower(Power);
+            go++;
+            telemetry.addData("help",go);
+            telemetry.update();
+            leftDrive.setPower(.5);
+            rightDrive.setPower(.5);
         }
 
+        telemetry.addLine("done");
+        telemetry.update();
         leftDrive.setPower(0);
         rightDrive.setPower(0);
 
@@ -97,6 +109,8 @@ public class Linear_Opmode extends LinearOpMode {
 
         while(leftDrive.isBusy()||rightDrive.isBusy()){
 
+            telemetry.addData("encodeer",leftDrive.getCurrentPosition());
+            telemetry.update();
         }
         leftDrive.setPower(0);
         rightDrive.setPower(0);
