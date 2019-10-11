@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @TeleOp(name = "Basic: Linear OpMode", group = "Linear Opmode")
-//@Disabled
+@Disabled
 public class Linear_Opmode extends LinearOpMode {
 
     // Declare OpMode members.
@@ -70,15 +70,11 @@ public class Linear_Opmode extends LinearOpMode {
 
     public void  Movement(double Power,double drive){
 
-        int go = 0;
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         while(opModeIsActive() && Math.abs(leftDrive.getCurrentPosition() - drive) >= 5 ) {
 
 
-            go++;
-            telemetry.addData("help",go);
-            telemetry.update();
             leftDrive.setPower(.5);
             rightDrive.setPower(.5);
         }
