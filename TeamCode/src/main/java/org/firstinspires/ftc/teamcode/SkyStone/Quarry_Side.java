@@ -48,14 +48,14 @@ public class Quarry_Side extends LinearOpMode {
 
 
     private String configuration = "Not Decided";
-    private int stonesLeft = 3;
+    private boolean stonesLeft = true;
     private RedFoundationDetector detector;
 
 
     private static final double middleBound = 0;
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
-    private static final boolean PHONE_IS_PORTRAIT = true;
+    private static final boolean PHONE_IS_PORTRAIT = false;
 
     private static final String VUFORIA_KEY =
             "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
@@ -147,14 +147,63 @@ public class Quarry_Side extends LinearOpMode {
         waitForStart();
 
 
+        //drive to where you can see the stones
+        //moveDistancePID(.5,20);
+
         //scan the stones
         scan(targetsSkyStone, allTrackables);
-        //targetsSkyStone.deactivate();
+        targetsSkyStone.deactivate();
 
 
-        //collectionPath();
+        //collect the stones
+        boolean skyStoneCollected = false;
+        boolean leftCollected = false;
+        boolean middleCollected = false;
+        boolean rightCollected = false;
 
-        //park on the middle line
+        while (opModeIsActive() && stonesLeft == true) {
+
+            if (!skyStoneCollected) {
+                if (configuration == "A") {
+                    grabStone("left");
+                    leftCollected = true;
+                    skyStoneCollected = true;
+                } else if (configuration == "B") {
+                    grabStone("middle");
+                    middleCollected = true;
+                    skyStoneCollected = true;
+                } else if (configuration == "C") {
+                    grabStone("right");
+                    skyStoneCollected = true;
+                    rightCollected = true;
+                }
+            } else {
+
+                if (!leftCollected) {
+                    grabStone("left");
+                    leftCollected = true;
+                } else if (!middleCollected) {
+                    grabStone("middle");
+                    middleCollected = true;
+                } else if (!rightCollected) {
+                    grabStone("right");
+                    rightCollected = true;
+                } else {
+                    stonesLeft = false;
+                }
+
+            }
+
+            if (stonesLeft == true) {
+                placeOnFoundation();
+
+                returnToHomingPosition();
+            }
+
+        }
+
+        //park on middle line
+        //drive from the homing position
 
     }
 
@@ -169,7 +218,7 @@ public class Quarry_Side extends LinearOpMode {
      * --------------------------------------------------*/
 
 /*
-    public void moveDistanvePID(double speed, double inches) {
+    public void moveDistancePID(double speed, double inches) {
 
 
         double targetPosition = (int) (inches * COUNTS_PER_INCH);
@@ -199,42 +248,6 @@ public class Quarry_Side extends LinearOpMode {
     }
 
  */
-
-
-    public void initDetector() {
-        telemetry.addData("Status", "DogeCV 2019.1 - Gold Align Example");
-
-        // Set up detector
-        detector = new RedFoundationDetector(); // Create detector
-        detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
-        detector.useDefaults(); // Set detector to use default settings
-
-        // Optional tuning
-        detector.alignSize = 200; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
-        detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
-        detector.downscale = 0.4; // How much to downscale the input frames
-
-        detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
-        //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
-        detector.maxAreaScorer.weight = 0.005; //
-
-        detector.ratioScorer.weight = 5; //
-        detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
-
-        detector.enable(); // Start the detector!
-
-
-    }
-
-
-    private void findFoundation() {
-
-        while (!isStopRequested()) {
-            telemetry.addData("IsAligned", detector.getAligned()); // Is the bot aligned with the gold mineral?
-            telemetry.addData("X Pos", detector.getXPosition()); // Gold X position.
-            telemetry.update();
-        }
-    }
 
 
     private void scan(VuforiaTrackables targetsSkyStone, List<VuforiaTrackable> allTrackables) {
@@ -290,31 +303,27 @@ public class Quarry_Side extends LinearOpMode {
                 double iterations = 0;
 
 
+                translation = lastLocation.getTranslation();
+                // express position (translation) of robot in inches.
+                telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
 
-                    translation = lastLocation.getTranslation();
-                    // express position (translation) of robot in inches.
-                    telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                            translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+                // express the rotation of the robot in degrees.
+                Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+                telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
 
-                    // express the rotation of the robot in degrees.
-                    Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-                    telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-
-                    telemetry.update();
-
+                telemetry.update();
 
 
-
-
-                telemetry.addData("x: ",translation.get(1)/mmPerInch);
+                telemetry.addData("x: ", translation.get(1) / mmPerInch);
                 telemetry.update();
                 sleep(2000);
 
 
-                if (translation.get(1)/mmPerInch <= middleBound) {
+                if (translation.get(1) / mmPerInch <= middleBound) {
                     configuration = "A";
                     telemetry.addLine("Pattern A");
-                } else if (translation.get(1)/mmPerInch >= middleBound) {
+                } else if (translation.get(1) / mmPerInch >= middleBound) {
                     configuration = "B";
                     telemetry.addLine("Pattern B");
                 }
@@ -329,90 +338,58 @@ public class Quarry_Side extends LinearOpMode {
     }
 
 
-    // can be adapted later to collect skyStones from other group of three.
-    private void collectionPath() {
+    private void grabStone(String position) {
 
-        switch (configuration) {
 
-            case "A":
-                collectLeft();
-                collectMiddle();
-                collectRight();
-                break;
-
-            case "B":
-                collectMiddle();
-                collectLeft();
-                collectRight();
-                break;
-
-            case "C":
-                collectRight();
-                collectLeft();
-                collectMiddle();
-                break;
-
-        }
-
-    }
-
-    private void collectLeft() {
-        // grab the stone
-        grabStone("left");
-        // drive over to where the foundation is
-
-        // find an accurate position and drive to it
-        initDetector();
-        findFoundation();
-        if (detector != null) detector.disable();
-
-        // drive over and place the stone
-
-        // go to a homing position
-    }
-
-    private void collectMiddle() {
-        // grab the stone
-        // drive over to where the foundation is
-
-        // find an accurate position and drive to it
-        initDetector();
-        findFoundation();
-        if (detector != null) detector.disable();
-
-        // drive over and place the stone
-
-        // go to a homing position
-    }
-
-    private void collectRight() {
-        // grab the stone
-        // drive over to where the foundation is
-
-        // find an accurate position and drive to it
-        initDetector();
-        findFoundation();
-        if (detector != null) detector.disable();
-
-        // drive over and place the stone
-
-        // go to a homing position
-    }
-
-    private void grabStone(String position){
-
-        //drive forward
-        //moveDistanvePID(.5, 30);
-
-        if (position == "left"){
+        if (position == "left") {
             //drive sideways left
-        }else if (position == "middle"){
+        } else if (position == "middle") {
             //drive sideways to align
-        }else if (position == "right"){
+        } else if (position == "right") {
             //drive sideways right
         }
 
+        //drive forward
+        //moveDistancePID(.5, 30);
+
         // grab it
+
+        //back up
+        //moveDistancePID(.5,-30);
+
+        if (position == "left") {
+            //drive back
+        } else if (position == "middle") {
+            //drive back
+        } else if (position == "right") {
+            //drive back
+        }
+
+    }
+
+
+    private void placeOnFoundation() {
+        //back up more if needed
+
+        //turn based on witch side your on
+        //use distance sensor to see witch team your on an turn accordingly
+
+        //drive forward until reach the foundation
+        //wait till safe auto and test to find how to tell where the foundation is
+
+        //turn by how you need to
+
+        //drive forward
+
+        //drop
+
+        //dive back stuff
+    }
+
+
+    private void returnToHomingPosition() {
+        //maybe use vuforia to line self up with target
+        //add stuff late if needed
     }
 
 }
