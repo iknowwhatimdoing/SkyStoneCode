@@ -5,6 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+//change to my directory (this might be right)
+import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
+
 
 /**
  * Created by Sarthak on 6/1/2019.
@@ -12,7 +15,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  */
 @TeleOp(name = "Global Coordinate Position Test", group = "Calibration")
 public class GlobalCoordinatePositionUpdateSample extends LinearOpMode {
-
 
     //Odometry encoder wheels
     DcMotor verticalRight, verticalLeft, horizontal;
@@ -70,11 +72,6 @@ public class GlobalCoordinatePositionUpdateSample extends LinearOpMode {
             //Display Global (x, y, theta) coordinates
             telemetry.addData("X Position", globalPositionUpdate.returnXCoordinate() / COUNTS_PER_INCH);
             telemetry.addData("Y Position", globalPositionUpdate.returnYCoordinate() / COUNTS_PER_INCH);
-
-            telemetry.addData("Vertical Left Encoder: ", verticalLeft.getCurrentPosition());
-            telemetry.addData("Vertical Right Encoder: ", verticalRight.getCurrentPosition());
-            telemetry.addData("Horizontal Encoder: ", horizontal.getCurrentPosition());
-
             telemetry.addData("Orientation (Degrees)", globalPositionUpdate.returnOrientation());
             telemetry.addData("Thread Active", positionThread.isAlive());
             telemetry.update();
