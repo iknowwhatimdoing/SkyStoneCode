@@ -4,9 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="Iterative OpMode", group="Iterative Opmode")
+@TeleOp(name="Trigger Outreach")
 //@Disabled
 public class Iterative_TriggerDrive extends OpMode
 {
@@ -16,17 +17,18 @@ public class Iterative_TriggerDrive extends OpMode
     private DcMotor rightDrive;
 
 
+
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
 
 
-        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
-        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
+        leftDrive  = hardwareMap.get(DcMotor.class, "left_motor");
+        rightDrive = hardwareMap.get(DcMotor.class, "right_motor");
 
 
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
 
         telemetry.addData("Status", "Initialized");

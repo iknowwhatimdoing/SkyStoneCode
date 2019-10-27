@@ -54,7 +54,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
     private String configuration = "Not Decided";
     private boolean stonesLeft = true;
-    private RedFoundationDetector detector;
+    //private RedFoundationDetector detector;
 
 
     private static final double middleBound = 0;
@@ -304,6 +304,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
             right_back.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent - pivotCorrection),-1,1));
         }
     }
+
 
 
 

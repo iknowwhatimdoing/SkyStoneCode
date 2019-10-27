@@ -38,8 +38,8 @@ public class Linear_Slide_Griff extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         drop = hardwareMap.get(DcMotor.class, "drop");
         drop_pin = hardwareMap.get(Servo.class, "drop_pin");
-        Range_Boy = hardwareMap.get(DistanceSensor.class, "Range_Boy");
-        Touchy_Boy = hardwareMap.get(DigitalChannel.class, "Touchy_Boy");
+        Range_Boy = hardwareMap.get(DistanceSensor.class, "Range_Boi");
+        Touchy_Boy = hardwareMap.get(DigitalChannel.class, "Touchy_Boi");
         Touchy_Boy.setMode(DigitalChannel.Mode.INPUT);
 
 
