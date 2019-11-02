@@ -34,7 +34,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-@Autonomous(name = "Vuforia Scan Quarry")
+@Autonomous(name = "Quarry Side")
 public class Quarry_Side extends LinearOpMode {
 
     //SkyStoneHardware robot = new SkyStoneHardware();

@@ -35,7 +35,7 @@ import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinate
 
 
 
-@Autonomous(name = "Vuforia Scan Quarry")
+@Autonomous(name = "Quarry Side (Odometry)")
 public class Quarry_Side_Odometry extends LinearOpMode {
 
 

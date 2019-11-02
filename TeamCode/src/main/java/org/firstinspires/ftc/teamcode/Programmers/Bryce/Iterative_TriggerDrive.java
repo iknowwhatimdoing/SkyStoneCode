@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="Trigger Outreach")
-//@Disabled
+@Disabled
 public class Iterative_TriggerDrive extends OpMode
 {
 
