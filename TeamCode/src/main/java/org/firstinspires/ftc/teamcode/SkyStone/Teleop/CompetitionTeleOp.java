@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -22,9 +23,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 public class CompetitionTeleOp extends OpMode {
 
-    double assist=0;
-    boolean doOnce = false;
+    double assist = 0;
     double current = 0;
+    boolean getCurrent = false;
+
+    boolean accurateSpeed = false;
+
 
     boolean holdHeading = false;
 
@@ -36,6 +40,8 @@ public class CompetitionTeleOp extends OpMode {
 
 
     ElapsedTime slowDown = new ElapsedTime();
+    ElapsedTime timeBetweenPress = new ElapsedTime();
+
     boolean slideup = false;
     double power = 0;
 
@@ -49,6 +55,9 @@ public class CompetitionTeleOp extends OpMode {
 
     DcMotor flipBackRight;
     DcMotor flipBackLeft;
+
+    Servo left_claw;
+    Servo right_claw;
 
 
     @Override
@@ -68,7 +77,6 @@ public class CompetitionTeleOp extends OpMode {
         imu.initialize(parameters);
 
 
-
         left_front = hardwareMap.get(DcMotor.class, "left_front");
         right_front = hardwareMap.get(DcMotor.class, "right_front");
         left_back = hardwareMap.get(DcMotor.class, "left_back");
@@ -80,8 +88,8 @@ public class CompetitionTeleOp extends OpMode {
 
         flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        flipBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        flipBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         linear_slide = hardwareMap.get(DcMotor.class, "linear_slide");
 
@@ -94,12 +102,17 @@ public class CompetitionTeleOp extends OpMode {
         right_front.setDirection(DcMotor.Direction.REVERSE);
         right_back.setDirection(DcMotor.Direction.REVERSE);
 
+
+        left_claw = hardwareMap.get(Servo.class, "lc");
+        right_claw = hardwareMap.get(Servo.class, "rc");
+
     }
 
     @Override
-    public void start(){
+    public void start() {
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
     }
+
     @Override
     public void loop() {
 
@@ -109,18 +122,41 @@ public class CompetitionTeleOp extends OpMode {
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
-        if(gamepad1.a){
-            current = angles.firstAngle;
-        }
 
-        if(gamepad1.left_bumper){
+        if (gamepad1.dpad_left) {
+            telemetry.addLine("Holding rotation");
             holdHeading = true;
+            current = angles.firstAngle;
 
-        }else if(gamepad1.right_bumper){
+        } else if (gamepad1.dpad_right) {
             holdHeading = false;
+            telemetry.addLine("Press left dpad to hold rotation");
         }
+
+        telemetry.update();
+
+
+        if(timeBetweenPress.seconds() > .5) {
+            if (gamepad1.left_stick_button) {
+                if (!accurateSpeed) {
+                    accurateSpeed = true;
+                } else if (accurateSpeed) {
+                    accurateSpeed = false;
+                }
+                timeBetweenPress.reset();
+            }
+        }
+
+
+
+
 
         if (gamepad1.left_trigger > 0) {
+
+            if (!getCurrent) {
+                current = angles.firstAngle;
+                getCurrent = true;
+            }
 
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double difference = current - angles.firstAngle;
@@ -134,7 +170,12 @@ public class CompetitionTeleOp extends OpMode {
 
 
             setPowerAll(lfpower, lbpower, rfpower, rbpower);
-        }else if(gamepad1.right_trigger > 0) {
+        } else if (gamepad1.right_trigger > 0) {
+
+            if (!getCurrent) {
+                current = angles.firstAngle;
+                getCurrent = true;
+            }
 
 
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -149,25 +190,37 @@ public class CompetitionTeleOp extends OpMode {
 
             setPowerAll(lfpower, lbpower, rfpower, rbpower);
         }
-        if(gamepad1.right_trigger == 0 && gamepad1.left_trigger == 0){
 
-            if(!holdHeading) {
-                double lfpower = driveforward + turn + driveSideways;
-                double lbpower = driveforward + turn - driveSideways;
-                double rfpower = driveforward - turn - driveSideways;
-                double rbpower = driveforward - turn + driveSideways;
+        if (gamepad1.right_trigger == 0 && gamepad1.left_trigger == 0) {
+            getCurrent = false;
+        }
+
+        if (gamepad1.right_trigger == 0 && gamepad1.left_trigger == 0) {
+
+            if (!holdHeading) {
+
+                double turnDivider = 1;
+                double speedDivider = 1;
+                if(accurateSpeed){
+                    turnDivider = 4;
+                    speedDivider = 4;
+                }
+                double lfpower = driveforward/speedDivider + turn/turnDivider + driveSideways/speedDivider;
+                double lbpower = driveforward/speedDivider + turn/turnDivider - driveSideways/speedDivider;
+                double rfpower = driveforward/speedDivider - turn/turnDivider - driveSideways/speedDivider;
+                double rbpower = driveforward/speedDivider - turn/turnDivider + driveSideways/speedDivider;
 
                 setPowerAll(lfpower, lbpower, rfpower, rbpower);
 
-            }else if(holdHeading){
+            } else if (holdHeading) {
                 angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
                 double difference = current - angles.firstAngle;
 
                 assist = difference / 40;
-                double lfpower = driveforward  + driveSideways - assist;
-                double lbpower = driveforward  - driveSideways - assist;
-                double rfpower = driveforward  - driveSideways + assist;
-                double rbpower = driveforward  + driveSideways + assist;
+                double lfpower = driveforward + driveSideways - assist;
+                double lbpower = driveforward - driveSideways - assist;
+                double rfpower = driveforward - driveSideways + assist;
+                double rbpower = driveforward + driveSideways + assist;
 
                 setPowerAll(lfpower, lbpower, rfpower, rbpower);
 
@@ -176,23 +229,42 @@ public class CompetitionTeleOp extends OpMode {
         }
 
 
-
-
         if (!slideup) {
-            if (gamepad1.dpad_down) {
-                flipBackLeft.setPower(-.4);
-                flipBackRight.setPower(-.4);
-            } else if (gamepad1.dpad_up) {
-                flipBackLeft.setPower(.4);
-                flipBackRight.setPower(.4);
-            } else {
-                flipBackLeft.setPower(0);
-                flipBackRight.setPower(0);
+            if (gamepad2.dpad_down) {
+                flipBackLeft.setTargetPosition(-350);
+                flipBackRight.setTargetPosition(-350);
+                flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            } else if (gamepad2.dpad_up) {
+                flipBackLeft.setTargetPosition(0);
+                flipBackRight.setTargetPosition(0);
+                flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            }
+
+            if ((flipBackLeft.isBusy() || flipBackRight.isBusy()) && Math.abs(flipBackLeft.getCurrentPosition() - flipBackLeft.getTargetPosition()) >= 5) {
+
+                double flipPower = 0;
+                if (Math.abs(flipBackLeft.getCurrentPosition() - flipBackLeft.getTargetPosition()) >= Math.abs(flipBackLeft.getTargetPosition() / 2)) {
+                    flipPower = .2;
+                } else if (Math.abs(flipBackLeft.getCurrentPosition() - flipBackLeft.getTargetPosition()) < Math.abs(flipBackLeft.getTargetPosition() / 3.5)) {
+                    flipPower = .1;
+                }
+
+                flipBackRight.setPower(flipPower);
+                flipBackLeft.setPower(flipPower);
+
             }
         }
 
 
-        if (gamepad1.y && !slideup) {
+        left_claw.setPosition(Range.clip((gamepad2.right_trigger + .25), 0, .41));
+        right_claw.setPosition(Range.clip((1 - gamepad2.right_trigger), .841, 1));
+
+
+        if (gamepad1.y && !slideup && (Math.abs(-flipBackLeft.getCurrentPosition() - 300) > 200)) {
 
             if (!(Math.abs(linear_slide.getCurrentPosition() - linear_slide.getTargetPosition()) > 5)) {
                 power = 0;

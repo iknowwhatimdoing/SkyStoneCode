@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Outreach Movement")
-@Disabled
+//@Disabled
 
 public class Bryce__OutReachDrive extends OpMode {
 
@@ -33,7 +33,7 @@ public class Bryce__OutReachDrive extends OpMode {
     @Override
     public void loop() {
 
-        double drive = gamepad1.left_stick_y;
+        double drive = -gamepad1.left_stick_y;
         double turn = gamepad1.right_stick_x;
 
         double leftPower = drive - turn;
