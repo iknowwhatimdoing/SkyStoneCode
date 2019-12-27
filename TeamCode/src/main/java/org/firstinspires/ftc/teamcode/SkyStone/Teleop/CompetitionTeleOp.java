@@ -4,6 +4,7 @@ import android.accounts.AuthenticatorDescription;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -92,43 +93,36 @@ public class CompetitionTeleOp extends OpMode {
          */
 
 
-
         double driveforward = -gamepad1.left_stick_y;
         //double leftSidePower = -gamepad1.left_stick_y;
         //double rightSidePower = -gamepad1.right_stick_y;
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
-        if (gamepad2.a){
+        if (gamepad2.a) {
             robot.skystoneArm.setTargetPosition(210);
             robot.skystoneArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }else if (gamepad2.y){
+        } else if (gamepad2.y) {
             robot.skystoneArm.setTargetPosition(0);
+            robot.skystoneArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         }
 
         PID(robot.skystoneArm);
 
 
-
-        if (gamepad2.x){
+        if (gamepad2.x) {
             robot.grabServo.setPosition(.75);
-        }else if (gamepad2.b) {
+        } else if (gamepad2.b) {
             robot.grabServo.setPosition(1);
         }
 
 
-
-
-
-
-
-        if (gamepad1.right_bumper){
-            robot.driveEach(.1,-.4,-.1,.4);
-        }else if (gamepad1.left_bumper){
-            robot.driveEach(-.1,.4,.1,-.4);
+        if (gamepad1.right_bumper) {
+            robot.driveEach(.1, -.4, -.1, .4);
+        } else if (gamepad1.left_bumper) {
+            robot.driveEach(-.1, .4, .1, -.4);
         }
-
-
 
 
         //slow speed
@@ -180,20 +174,20 @@ public class CompetitionTeleOp extends OpMode {
 
 
         //drivng
-        if (!gamepad1.dpad_left && !gamepad1.dpad_right&& !gamepad1.left_bumper && !gamepad1.right_bumper) {
+        if (!gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.left_bumper && !gamepad1.right_bumper) {
 
-                double turnDivider = 1;
-                double speedDivider = 1;
-                if (accurateSpeed) {
-                    turnDivider = 4;
-                    speedDivider = 4;
-                }
-                double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
-                double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider;
-                double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider;
-                double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider;
+            double turnDivider = 1;
+            double speedDivider = 1;
+            if (accurateSpeed) {
+                turnDivider = 4;
+                speedDivider = 4;
+            }
+            double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
+            double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider;
+            double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider;
+            double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider;
 
-                robot.driveEach(lfpower, lbpower, rfpower, rbpower);
+            robot.driveEach(lfpower, lbpower, rfpower, rbpower);
 
         }
 
@@ -227,7 +221,7 @@ public class CompetitionTeleOp extends OpMode {
 
         //claw
 
-        robot.front_claw.setPosition(1 - (gamepad2.right_trigger/3.125));
+        robot.front_claw.setPosition(1 - (gamepad2.right_trigger / 3.125));
         //telemetry.addData("pos", front_claw.getPosition());
         //telemetry.update();
 
@@ -235,21 +229,21 @@ public class CompetitionTeleOp extends OpMode {
         //linear slide
         if (gamepad1.left_trigger > 0) {
 
-            if (robot.linear_slide.getCurrentPosition() < 3888){
+            if (robot.linear_slide.getCurrentPosition() < 3888) {
                 robot.linear_slide.setPower(gamepad1.left_trigger);
-            }else{
+            } else {
                 robot.linear_slide.setPower(0);
             }
 
         } else if (gamepad1.right_trigger > 0) {
 
-            if (robot.linear_slide.getCurrentPosition() >30) {
+            if (robot.linear_slide.getCurrentPosition() > 30) {
                 robot.linear_slide.setPower(-gamepad1.right_trigger);
-            }else{
+            } else {
                 robot.linear_slide.setPower(0);
             }
 
-        }else{
+        } else {
             robot.linear_slide.setPower(0);
         }
 
@@ -257,9 +251,9 @@ public class CompetitionTeleOp extends OpMode {
     }
 
 
-    public void PID(DcMotor movingMotor){
+    public void PID(DcMotor movingMotor) {
 
-        if (Math.abs(movingMotor.getCurrentPosition()-movingMotor.getTargetPosition())>=5 ) {
+        if (Math.abs(movingMotor.getCurrentPosition() - movingMotor.getTargetPosition()) >= 5) {
             double targetPosition = movingMotor.getTargetPosition();
             double integral = 0;
             ElapsedTime timer = new ElapsedTime();
@@ -275,7 +269,7 @@ public class CompetitionTeleOp extends OpMode {
                 double deltaError = lastError - error;
                 integral += deltaError * timer.time();
                 double derivative = deltaError / timer.time();
-                movingMotor.setPower(-1*(Kp * error + Ki * integral));
+                movingMotor.setPower(-1 * (Kp * error + Ki * integral));
                 lastError = error;
                 timer.reset();
 
