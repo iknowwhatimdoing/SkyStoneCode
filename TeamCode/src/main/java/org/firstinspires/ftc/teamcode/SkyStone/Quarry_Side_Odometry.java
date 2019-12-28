@@ -45,14 +45,11 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 public class Quarry_Side_Odometry extends LinearOpMode {
 
 
-    //Drive motors
-    DcMotor right_front, right_back, left_front, left_back;
-    //Odometry Wheels
-    DcMotor verticalLeft, verticalRight, horizontal;
+    DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
+    DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
 
     final double COUNTS_PER_INCH = 307.699557;
 
-    //Hardware Map Names for drive motors and odometry wheels. THIS WILL CHANGE ON EACH ROBOT, YOU NEED TO UPDATE THESE VALUES ACCORDINGLY
     String rfName = "right_front", rbName = "right_back", lfName = "left_front", lbName = "left_back";
     String verticalLeftEncoderName = lfName, verticalRightEncoderName = rfName, horizontalEncoderName = rbName;
 
@@ -62,7 +59,6 @@ public class Quarry_Side_Odometry extends LinearOpMode {
     private OpenCvCamera phoneCam;
     private SkystoneDetector skyStoneDetector;
 
-
     private String configuration = "Not Decided";
     private boolean stonesLeft = true;
 
@@ -70,7 +66,6 @@ public class Quarry_Side_Odometry extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        //Initialize hardware map values. PLEASE UPDATE THESE VALUES TO MATCH YOUR CONFIGURATION
         initDriveHardwareMap(rfName, rbName, lfName, lbName, verticalLeftEncoderName, verticalRightEncoderName, horizontalEncoderName);
 
         telemetry.addData("Status", "Init Complete");
@@ -80,13 +75,12 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
         waitForStart();
 
-        //Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions
         //globalPositionUpdate = new OdometryGlobalCoordinatePosition(verticalLeft, verticalRight, horizontal, COUNTS_PER_INCH, 75);
         //Thread positionThread = new Thread(globalPositionUpdate);
         //positionThread.start();
 
-        //globalPositionUpdate.reverseRightEncoder();
-        //globalPositionUpdate.reverseNormalEncoder();
+        //globalPositionUpdate.reverseRightEncoder();     might not need
+        //globalPositionUpdate.reverseNormalEncoder();    might not need
 
 
         //drive to where you can see the stones

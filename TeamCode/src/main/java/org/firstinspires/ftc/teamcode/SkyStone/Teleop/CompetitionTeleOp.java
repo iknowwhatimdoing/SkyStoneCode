@@ -35,6 +35,8 @@ public class CompetitionTeleOp extends OpMode {
     double current = 0;
     boolean getCurrent = false;
     boolean accurateSpeed = false;
+    double turnDivider = 1;
+    double speedDivider = 1;
 
     ElapsedTime timeBetweenPress = new ElapsedTime();
 
@@ -83,19 +85,17 @@ public class CompetitionTeleOp extends OpMode {
 
          */
 
-        /*
-        telemetry.addData("lencoder ", Lencoder.getCurrentPosition());
-        telemetry.addData("rencoder", Rencoder.getCurrentPosition());
-        telemetry.addData("hencoder", Hencoder.getCurrentPosition());
+
+        telemetry.addData("lencoder ", robot.Lencoder.getCurrentPosition());
+        telemetry.addData("rencoder", robot.Rencoder.getCurrentPosition());
+        telemetry.addData("hencoder", robot.Hencoder.getCurrentPosition());
         telemetry.update();
 
 
-         */
+
 
 
         double driveforward = -gamepad1.left_stick_y;
-        //double leftSidePower = -gamepad1.left_stick_y;
-        //double rightSidePower = -gamepad1.right_stick_y;
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
@@ -130,8 +130,12 @@ public class CompetitionTeleOp extends OpMode {
             if (gamepad1.left_stick_button) {
                 if (!accurateSpeed) {
                     accurateSpeed = true;
+                    speedDivider = 4;
+                    turnDivider = 4;
                 } else if (accurateSpeed) {
                     accurateSpeed = false;
+                    speedDivider = 1;
+                    turnDivider = 1;
                 }
                 timeBetweenPress.reset();
             }
@@ -146,49 +150,40 @@ public class CompetitionTeleOp extends OpMode {
                 getCurrent = true;
             }
 
-            double turnDivider = 1;
-            double speedDivider = 1;
-            if (accurateSpeed) {
-                turnDivider = 4;
-                speedDivider = 4;
-            }
-
             robot.angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double difference = current - robot.angles.firstAngle;
-
             assist = difference / 40;
-            driveSideways = -.5;
+
+            if (gamepad1.dpad_left) {
+                driveSideways = -.5;
+            }else if (gamepad1.dpad_right){
+                driveSideways = .5;
+            }
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider - assist;
             double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider - assist;
             double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider + assist;
             double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider + assist;
 
-
             robot.driveEach(lfpower, lbpower, rfpower, rbpower);
         }
-
-
         if (!gamepad1.dpad_left && !gamepad1.dpad_right) {
             getCurrent = false;
         }
 
 
+
+
+
+
+
         //drivng
         if (!gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.left_bumper && !gamepad1.right_bumper) {
-
-            double turnDivider = 1;
-            double speedDivider = 1;
-            if (accurateSpeed) {
-                turnDivider = 4;
-                speedDivider = 4;
-            }
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
             double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider;
             double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider;
             double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider;
 
             robot.driveEach(lfpower, lbpower, rfpower, rbpower);
-
         }
 
 
@@ -197,21 +192,16 @@ public class CompetitionTeleOp extends OpMode {
             if (gamepad2.dpad_down) {
                 robot.flipBackLeft.setTargetPosition(-300);
                 robot.flipBackRight.setTargetPosition(-300);
-
             } else if (gamepad2.dpad_up) {
                 robot.flipBackLeft.setTargetPosition(0);
                 robot.flipBackRight.setTargetPosition(0);
-
-
             }
 
             robot.flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             robot.flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             if ((robot.flipBackLeft.isBusy() || robot.flipBackRight.isBusy())) {
-
                 double flipPower = .3;
-
                 robot.flipBackRight.setPower(flipPower);
                 robot.flipBackLeft.setPower(flipPower);
 
@@ -219,11 +209,11 @@ public class CompetitionTeleOp extends OpMode {
         }
 
 
-        //claw
 
+
+        //claw
         robot.front_claw.setPosition(1 - (gamepad2.right_trigger / 3.125));
-        //telemetry.addData("pos", front_claw.getPosition());
-        //telemetry.update();
+
 
 
         //linear slide
