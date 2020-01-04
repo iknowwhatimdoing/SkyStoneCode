@@ -48,7 +48,6 @@ public class CompetitionTeleOp extends OpMode {
 
     @Override
     public void start() {
-        robot.skystoneArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         robot.linear_slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -82,32 +81,24 @@ public class CompetitionTeleOp extends OpMode {
         telemetry.addData("range", String.format("%.01f in", leftSideDist.getDistance(DistanceUnit.INCH)));
         telemetry.update();
 
-
+         */
 
         telemetry.addData("left", robot.Lencoder.getCurrentPosition());
         telemetry.addData("right", robot.Rencoder.getCurrentPosition());
         telemetry.update();
-        */
+
+
+        /*
 
         telemetry.addLine("Left");
         telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
         telemetry.update();
 
+         */
+
         double driveforward = -gamepad1.left_stick_y;
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
-
-        if (gamepad2.a) {
-            robot.skystoneArm.setTargetPosition(210);
-            robot.skystoneArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        } else if (gamepad2.y) {
-            robot.skystoneArm.setTargetPosition(0);
-            robot.skystoneArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        }
-
-        PID(robot.skystoneArm);
-
 
         if (gamepad2.x) {
             robot.grabServo.setPosition(.75);

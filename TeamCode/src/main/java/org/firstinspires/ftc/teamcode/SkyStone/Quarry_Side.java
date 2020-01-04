@@ -94,71 +94,130 @@ public class Quarry_Side extends LinearOpMode {
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        rightSideDist = hardwareMap.get(DistanceSensor.class,"rightSideDist");
-        leftSideDist = hardwareMap.get(DistanceSensor.class,"leftSideDist");
-        frontLeftDist = hardwareMap.get(DistanceSensor.class,"frontLeftDist");
-        frontRightDist = hardwareMap.get(DistanceSensor.class,"frontRightDist");
-
+        rightSideDist = hardwareMap.get(DistanceSensor.class, "rightSideDist");
+        leftSideDist = hardwareMap.get(DistanceSensor.class, "leftSideDist");
+        frontLeftDist = hardwareMap.get(DistanceSensor.class, "frontLeftDist");
+        frontRightDist = hardwareMap.get(DistanceSensor.class, "frontRightDist");
 
 
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
 
 
+
+
+
+
+
         waitForStart();
 
+
+
+
+
+
+
+        //Move close to the stone line
         moveDistanceEncoder(23, .5);
 
 
+        //flip the linear slide down
         flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackLeft.setTargetPosition(350);
         flipBackRight.setTargetPosition(350);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()){
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
             flipBackLeft.setPower(.4);
             flipBackRight.setPower(.4);
         }
 
 
+        //move to be aligned with the left most stone. (no scanning for skystone yet)
         strafeEncoder(-6, .5);
-        moveDistanceEncoder(1.5, .25);
-        frontClaw.setPosition(0);
 
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
         sleep(1000);
 
+        //Flip the linear slide back into the robot
         flipBackLeft.setTargetPosition(0);
         flipBackRight.setTargetPosition(0);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()){
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
             flipBackLeft.setPower(.2);
             flipBackRight.setPower(.2);
         }
 
+
+        //long strafe
         modernRoboticsI2cGyro.resetZAxisIntegrator();
-        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();
-
-        moveDistanceEncoder(-1, .5);
-        strafeEncoder(-20, .5);
-
-        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();
-        turnDegree(disOff, .45);
-
-        strafeEncoder(-24, .5);
-        moveDistanceEncoder(2, .5);
+        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        moveDistanceEncoder(-1, .5);    //move forward a little to get ready for the strafe
+        strafeEncoder(-20, .5);         //strafe halfway
+        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45);     //turn by the amount off
+        strafeEncoder(-24, .5);      //strafe the rest of the way
+        moveDistanceEncoder(2, .5);      //move forward a little to get out of the way
 
 
-        while (leftSideDist.getDistance(DistanceUnit.INCH) > 15){
-
+        //use distance sensor to find where the foundation is
+        while (opModeIsActive() && leftSideDist.getDistance(DistanceUnit.INCH) < 15) {
         }
-
-        if ((leftSideDist.getDistance(DistanceUnit.INCH))  < 32 ){
+        if ((leftSideDist.getDistance(DistanceUnit.INCH)) < 30) {
             foundationPos = "shortOnWall";
-        }else{
-            strafeEncoder(-10,.5);
+        } else {
+            strafeEncoder(-10, .5);
         }
+
+
+
+        switch (foundationPos){
+            case "shortOnWall":
+                turnDegree(90,.5);
+                break;
+            case "longOnWall":
+                turnDegree(90,.5);
+                moveDistanceEncoder(10,.7);
+                break;
+            case "unMoved":
+                strafeEncoder(-10,.7);
+                break;
+        }
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        frontClaw.setPosition(.7);
+        sleep(1000);
+
+        switch (foundationPos){
+            case "shortOnWall":
+                moveDistanceEncoder(-10,.7);
+                break;
+            case "longOnWall":
+                moveDistanceEncoder(-20,.7);
+                break;
+            case "unMoved":
+                strafeEncoder(10,.7);
+                break;
+        }
+
 
 
 
@@ -169,52 +228,11 @@ public class Quarry_Side extends LinearOpMode {
         //
 
 
-
-
         //scanCV();
 
 
         //scan values   {(223/225), (154/197), (284/285)}
 
-        /*
-        strafeEncoder(-18, .7);
-        moveDistanceEncoder(26, .7);
-
-
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-        flipBackLeft.setTargetPosition(350);
-        flipBackRight.setTargetPosition(350);
-
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && flipBackLeft.isBusy()){
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        moveDistanceEncoder(-26,.7);
-
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && flipBackLeft.isBusy()){
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-
-        strafeEncoder(44,.7);
-
-        moveDistanceEncoder(-2,.3);
-
-         */
 
 
         //collect the stones
@@ -329,12 +347,12 @@ public class Quarry_Side extends LinearOpMode {
             }
 
 
-            if (inches > 0 && ((verticalRight.getCurrentPosition() >= (2*(ticks / 3))) ||
-                    (verticalLeft.getCurrentPosition() >= (2*(ticks / 3))))) {
+            if (inches > 0 && ((verticalRight.getCurrentPosition() >= (2 * (ticks / 3))) ||
+                    (verticalLeft.getCurrentPosition() >= (2 * (ticks / 3))))) {
                 leftPower = .25;
                 rightPower = .25;
-            } else if (inches < 0 && ((verticalRight.getCurrentPosition() <= (2*(ticks / 3))) ||
-                    (verticalLeft.getCurrentPosition() <= (2*(ticks / 3))))) {
+            } else if (inches < 0 && ((verticalRight.getCurrentPosition() <= (2 * (ticks / 3))) ||
+                    (verticalLeft.getCurrentPosition() <= (2 * (ticks / 3))))) {
                 leftPower = -.25;
                 rightPower = -.25;
             }
@@ -346,9 +364,9 @@ public class Quarry_Side extends LinearOpMode {
             right_back.setPower(rightPower - adjust);
 
 
-            if (inches > 0 && ((verticalLeft.getCurrentPosition() > targetLeft) || (verticalRight.getCurrentPosition() > targetRight))){
+            if (inches > 0 && ((verticalLeft.getCurrentPosition() > targetLeft) || (verticalRight.getCurrentPosition() > targetRight))) {
                 break;
-            }else if (inches < 0 && ((verticalLeft.getCurrentPosition() < targetLeft) || (verticalRight.getCurrentPosition() < targetRight))){
+            } else if (inches < 0 && ((verticalLeft.getCurrentPosition() < targetLeft) || (verticalRight.getCurrentPosition() < targetRight))) {
                 break;
             }
         }
@@ -433,7 +451,6 @@ public class Quarry_Side extends LinearOpMode {
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
 
 
-
             if (degrees > 0 && integratedZ > degrees / 2) {
                 leftSpeed = -.25;
                 rightSpeed = .25;
@@ -456,6 +473,7 @@ public class Quarry_Side extends LinearOpMode {
         right_front.setPower(rf);
         right_back.setPower(rb);
     }
+
     public void driveAll(double power) {
         left_front.setPower(power);
         left_back.setPower(power);
@@ -504,7 +522,6 @@ public class Quarry_Side extends LinearOpMode {
 
 
      */
-
 
 
     private void scanCV() {

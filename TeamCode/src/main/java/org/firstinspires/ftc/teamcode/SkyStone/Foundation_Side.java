@@ -101,13 +101,13 @@ public class Foundation_Side extends LinearOpMode {
         flipBackRight.setTargetPosition(350);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()){
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
             flipBackLeft.setPower(.4);
             flipBackRight.setPower(.4);
         }
 
         //Back up to the wall with the foundation
-        moveDistanceEncoder(-28,.7);
+        moveDistanceEncoder(-28, .7);
 
 
         //Flip the slide back to let go of the foundation
@@ -115,16 +115,14 @@ public class Foundation_Side extends LinearOpMode {
         flipBackRight.setTargetPosition(0);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()){
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
             flipBackLeft.setPower(.4);
             flipBackRight.setPower(.4);
         }
 
 
         //Strafe under the bridge
-        strafeEncoder(44,.7);
-
-
+        strafeEncoder(44, .7);
 
 
         //drive to where you can see the stones
@@ -247,12 +245,12 @@ public class Foundation_Side extends LinearOpMode {
             }
 
 
-            if (inches > 0 && ((verticalRight.getCurrentPosition() >= (2*(ticks / 3))) ||
-                    (verticalLeft.getCurrentPosition() >= (2*(ticks / 3))))) {
+            if (inches > 0 && ((verticalRight.getCurrentPosition() >= (2 * (ticks / 3))) ||
+                    (verticalLeft.getCurrentPosition() >= (2 * (ticks / 3))))) {
                 leftPower = .25;
                 rightPower = .25;
-            } else if (inches < 0 && ((verticalRight.getCurrentPosition() <= (2*(ticks / 3))) ||
-                    (verticalLeft.getCurrentPosition() <= (2*(ticks / 3))))) {
+            } else if (inches < 0 && ((verticalRight.getCurrentPosition() <= (2 * (ticks / 3))) ||
+                    (verticalLeft.getCurrentPosition() <= (2 * (ticks / 3))))) {
                 leftPower = -.25;
                 rightPower = -.25;
             }
@@ -264,9 +262,9 @@ public class Foundation_Side extends LinearOpMode {
             right_back.setPower(rightPower - adjust);
 
 
-            if (inches > 0 && ((verticalLeft.getCurrentPosition() > targetLeft) || (verticalRight.getCurrentPosition() > targetRight))){
+            if (inches > 0 && ((verticalLeft.getCurrentPosition() > targetLeft) || (verticalRight.getCurrentPosition() > targetRight))) {
                 break;
-            }else if (inches < 0 && ((verticalLeft.getCurrentPosition() < targetLeft) || (verticalRight.getCurrentPosition() < targetRight))){
+            } else if (inches < 0 && ((verticalLeft.getCurrentPosition() < targetLeft) || (verticalRight.getCurrentPosition() < targetRight))) {
                 break;
             }
         }
@@ -311,7 +309,7 @@ public class Foundation_Side extends LinearOpMode {
 
             if (inches > 0 && horizontal.getCurrentPosition() >= (2 * (ticks / 3))) {
                 power = .25;
-            }else if (inches < 0 && horizontal.getCurrentPosition() <= (2 * (ticks / 3))){
+            } else if (inches < 0 && horizontal.getCurrentPosition() <= (2 * (ticks / 3))) {
                 power = -.25;
             }
 
@@ -367,6 +365,11 @@ public class Foundation_Side extends LinearOpMode {
         driveAll(0);
 
     }
+
+
+
+
+
 
     /*
     public void moveEncoder(int ticks, double speed){
@@ -431,7 +434,11 @@ public class Foundation_Side extends LinearOpMode {
 
     }
 
+
+
      */
+
+
 
 
     public void driveEach(double lf, double lb, double rf, double rb) {

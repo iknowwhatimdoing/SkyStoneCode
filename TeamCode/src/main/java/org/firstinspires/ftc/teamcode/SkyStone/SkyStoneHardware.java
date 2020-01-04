@@ -32,7 +32,7 @@ public class SkyStoneHardware {
     public DcMotor linear_slide;
     public DcMotor flipBackRight;
     public DcMotor flipBackLeft;
-    public DcMotor skystoneArm;
+    //public DcMotor skystoneArm;
 
     public Servo front_claw;
     public Servo grabServo;
@@ -96,7 +96,7 @@ public class SkyStoneHardware {
 
         linear_slide = hwMap.get(DcMotor.class, "linear_slide");
 
-        skystoneArm = hwMap.get(DcMotor.class,"skystoneArm");
+        //skystoneArm = hwMap.get(DcMotor.class,"skystoneArm");
 
         front_claw = hwMap.get(Servo.class, "frontclaw");
 
@@ -142,9 +142,8 @@ public class SkyStoneHardware {
         //linear_slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
-        //skystoneArm.setDirection(DcMotorSimple.Direction.REVERSE);
-        skystoneArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        skystoneArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //skystoneArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //skystoneArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
 
@@ -155,7 +154,7 @@ public class SkyStoneHardware {
         flipBackLeft.setPower(0);
         flipBackRight.setPower(0);
         linear_slide.setPower(0);
-        skystoneArm.setPower(0);
+        //skystoneArm.setPower(0);
     }
 
 
