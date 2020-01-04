@@ -83,17 +83,15 @@ public class CompetitionTeleOp extends OpMode {
         telemetry.update();
 
 
-         */
 
-
-        telemetry.addData("lencoder ", robot.Lencoder.getCurrentPosition());
-        telemetry.addData("rencoder", robot.Rencoder.getCurrentPosition());
-        telemetry.addData("hencoder", robot.Hencoder.getCurrentPosition());
+        telemetry.addData("left", robot.Lencoder.getCurrentPosition());
+        telemetry.addData("right", robot.Rencoder.getCurrentPosition());
         telemetry.update();
+        */
 
-
-
-
+        telemetry.addLine("Left");
+        telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
+        telemetry.update();
 
         double driveforward = -gamepad1.left_stick_y;
         double driveSideways = gamepad1.left_stick_x;
@@ -156,7 +154,7 @@ public class CompetitionTeleOp extends OpMode {
 
             if (gamepad1.dpad_left) {
                 driveSideways = -.5;
-            }else if (gamepad1.dpad_right){
+            } else if (gamepad1.dpad_right) {
                 driveSideways = .5;
             }
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider - assist;
@@ -169,11 +167,6 @@ public class CompetitionTeleOp extends OpMode {
         if (!gamepad1.dpad_left && !gamepad1.dpad_right) {
             getCurrent = false;
         }
-
-
-
-
-
 
 
         //drivng
@@ -209,26 +202,23 @@ public class CompetitionTeleOp extends OpMode {
         }
 
 
-
-
         //claw
-        robot.front_claw.setPosition(1 - (gamepad2.right_trigger / 3.125));
-
+        robot.front_claw.setPosition((1 - gamepad2.right_trigger) / 1.4);
 
 
         //linear slide
-        if (gamepad1.left_trigger > 0) {
+        if (gamepad1.right_trigger > 0) {
 
             if (robot.linear_slide.getCurrentPosition() < 3888) {
-                robot.linear_slide.setPower(gamepad1.left_trigger);
+                robot.linear_slide.setPower(gamepad1.right_trigger);
             } else {
                 robot.linear_slide.setPower(0);
             }
 
-        } else if (gamepad1.right_trigger > 0) {
+        } else if (gamepad1.left_trigger > 0) {
 
             if (robot.linear_slide.getCurrentPosition() > 30) {
-                robot.linear_slide.setPower(-gamepad1.right_trigger);
+                robot.linear_slide.setPower(-gamepad1.left_trigger);
             } else {
                 robot.linear_slide.setPower(0);
             }
@@ -264,10 +254,8 @@ public class CompetitionTeleOp extends OpMode {
                 timer.reset();
 
             }
-
         }
     }
-
 
 }
 

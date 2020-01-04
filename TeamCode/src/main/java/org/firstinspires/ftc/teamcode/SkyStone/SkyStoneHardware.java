@@ -37,10 +37,13 @@ public class SkyStoneHardware {
     public Servo front_claw;
     public Servo grabServo;
 
-    DistanceSensor rightSideDist;
-    DistanceSensor leftSideDist;
-    DistanceSensor frontLeftDist;
-    DistanceSensor frontRightDist;
+    public DistanceSensor rightSideDist;
+    public DistanceSensor leftSideDist;
+    public DistanceSensor frontLeftDist;
+    public DistanceSensor frontRightDist;
+
+    public IntegratingGyroscope gyro;
+    public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
 
 
 
@@ -58,6 +61,13 @@ public class SkyStoneHardware {
     public void init(HardwareMap ahwMap) {
         // Save reference to Hardware map
         hwMap = ahwMap;
+
+
+        modernRoboticsI2cGyro = hwMap.get(ModernRoboticsI2cGyro.class, "gyro");
+        gyro = (IntegratingGyroscope)modernRoboticsI2cGyro;
+
+        modernRoboticsI2cGyro.calibrate();
+
 
 
         // Initialize the IMU

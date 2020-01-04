@@ -21,7 +21,7 @@ public class TestPositionDrive extends LinearOpMode {
     final double COUNTS_PER_INCH = 307.699557;
 
     //Hardware Map Names for drive motors and odometry wheels. THIS WILL CHANGE ON EACH ROBOT, YOU NEED TO UPDATE THESE VALUES ACCORDINGLY
-    String rfName = "rf", rbName = "rb", lfName = "lf", lbName = "lb";
+    String rfName = "right_front", rbName = "right_back", lfName = "left_front", lbName = "left_back";
     String verticalLeftEncoderName = rbName, verticalRightEncoderName = lfName, horizontalEncoderName = rfName;
 
     OdometryGlobalCoordinatePosition globalPositionUpdate;
@@ -45,7 +45,7 @@ public class TestPositionDrive extends LinearOpMode {
 
 
 
-        goToPosition(1,1,.5,0,.5);
+        goToPosition(3,3,.5,0,10);
 
 
         while (opModeIsActive()) {
@@ -92,11 +92,16 @@ public class TestPositionDrive extends LinearOpMode {
             double pivotCorrection = desiredRobotOrientation - globalPositionUpdate.returnOrientation();
 
             //may need to flip the signs for the pivotCorrection
-            left_front.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent + pivotCorrection ),-1,1));
-            left_back.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent + pivotCorrection),-1,1));
-            right_front.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent - pivotCorrection),-1,1));
-            right_back.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent - pivotCorrection),-1,1));
+
+            left_front.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent  ),-1,1));
+            left_back.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent ),-1,1));
+            right_front.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent ),-1,1));
+            right_back.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent ),-1,1));
         }
+        left_back.setPower(0);
+        left_front.setPower(0);
+        right_back.setPower(0);
+        right_front.setPower(0);
     }
 
     private void initDriveHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName) {
@@ -133,7 +138,7 @@ public class TestPositionDrive extends LinearOpMode {
         left_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_front.setDirection(DcMotorSimple.Direction.REVERSE);
+        left_back.setDirection(DcMotorSimple.Direction.REVERSE);
         right_front.setDirection(DcMotorSimple.Direction.REVERSE);
         right_back.setDirection(DcMotorSimple.Direction.REVERSE);
 
