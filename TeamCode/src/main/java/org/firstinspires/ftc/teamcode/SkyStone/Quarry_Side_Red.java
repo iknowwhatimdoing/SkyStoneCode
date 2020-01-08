@@ -8,27 +8,28 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.util.ReadWriteFile;
-import com.vuforia.CameraDevice;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 
-import java.io.File;
+
+@Autonomous(name = "Quarry Side (Red)")
+public class Quarry_Side_Red extends LinearOpMode {
 
 
-@Autonomous(name = "Foundation Side")
-public class Foundation_Side extends LinearOpMode {
+    String foundationPos = "";
+
+
+    public DistanceSensor rightSideDist;
+    public DistanceSensor leftSideDist;
+    public DistanceSensor frontLeftDist;
+    public DistanceSensor frontRightDist;
+
 
     Servo frontClaw;
     DcMotor flipBackLeft;
@@ -80,21 +81,37 @@ public class Foundation_Side extends LinearOpMode {
         flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+
+        rightSideDist = hardwareMap.get(DistanceSensor.class, "rightSideDist");
+        leftSideDist = hardwareMap.get(DistanceSensor.class, "leftSideDist");
+        frontLeftDist = hardwareMap.get(DistanceSensor.class, "frontLeftDist");
+        frontRightDist = hardwareMap.get(DistanceSensor.class, "frontRightDist");
+
+
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
+
+
+
+
+
 
 
         waitForStart();
 
 
-        //strafe to align with the foundation
-        strafeEncoder(-18, .5);
-
-        //Move forward to grab the foundation
-        moveDistanceEncoder(26, .7);
+        frontClaw.setPosition(.7);
+        sleep(800);
 
 
-        //Flip the slide forward to grab the foundation
+
+
+
+        //Move close to the stone line
+        moveDistanceEncoder(23, .5);
+
+
+        //flip the linear slide down
         flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackLeft.setTargetPosition(350);
@@ -106,13 +123,81 @@ public class Foundation_Side extends LinearOpMode {
             flipBackRight.setPower(.4);
         }
 
-        //Back up to the wall with the foundation
-        moveDistanceEncoder(-28, .7);
 
+        //move to be aligned with the left most stone. (no scanning for skystone yet)
+        strafeEncoder(6, .5);
 
-        //Flip the slide back to let go of the foundation
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
         flipBackLeft.setTargetPosition(0);
         flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+        //long strafe
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        moveDistanceEncoder(-1, .5);    //move forward a little to get ready for the strafe
+        strafeEncoder(20, .5);         //strafe halfway
+        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45,1);     //turn by the amount off
+        strafeEncoder(24, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45,1);     //turn by the amount off
+
+        //Google Doc Code Here
+       moveDistanceEncoder(-1,.75);
+
+
+        //use distance sensor to find where the foundation is
+        while (opModeIsActive() && rightSideDist.getDistance(DistanceUnit.INCH) < 15) {
+            telemetry.addData("dist",rightSideDist.getDistance(DistanceUnit.INCH));
+            telemetry.update();
+            sleep(1500);
+        }
+        if ((rightSideDist.getDistance(DistanceUnit.INCH)) < 30) {
+            foundationPos = "shortOnWall";
+        } else {
+            foundationPos = "unMoved";
+        }
+
+        moveDistanceEncoder(1,.75);
+
+
+
+        switch (foundationPos){
+            case "shortOnWall":
+                turnDegree(-90,.5,1);
+                moveDistanceEncoder(6.5, .5);
+                strafeEncoder(3,.5);
+                break;
+            case "longOnWall":
+                turnDegree(90,.5,1);
+                moveDistanceEncoder(10,.7);
+                break;
+            case "unMoved":
+                //strafeEncoder(-10,.5);
+                break;
+        }
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         while (opModeIsActive() && flipBackLeft.isBusy()) {
@@ -120,17 +205,53 @@ public class Foundation_Side extends LinearOpMode {
             flipBackRight.setPower(.4);
         }
 
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(1000);
 
-        //Strafe under the bridge
-        strafeEncoder(44, .5);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
 
 
-        //drive to where you can see the stones
-        //moveDistancePID(.5,20);
-        //goToPosition(1,1,.5,0,.5);
+        //park on line
+        switch (foundationPos){
+            case "shortOnWall":
 
-        //scan the stones
+                strafeEncoder(-2,.5);
+                moveDistanceEncoder(-15,.5);
+                break;
+            case "longOnWall":
+                moveDistanceEncoder(-20,.7);
+                break;
+            case "unMoved":
+                //moveDistanceEncoder(3,.5);
+                strafeEncoder(-20,.5);
+                moveDistanceEncoder(3,.5);
+                break;
+        }
+
+
+
+
+
+
+        //36-38, long side against wall
+        //26-28, short side against wall
+        //
+
+
         //scanCV();
+
+
+        //scan values   {(223/225), (154/197), (284/285)}
+
 
 
         //collect the stones
@@ -324,7 +445,7 @@ public class Foundation_Side extends LinearOpMode {
 
     }
 
-    public void turnDegree(double degrees, double speed) {
+    public void turnDegree(double degrees, double speed, double allowedError) {
         modernRoboticsI2cGyro.resetZAxisIntegrator();
         //double heading = modernRoboticsI2cGyro.getHeading();
         double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
@@ -345,12 +466,9 @@ public class Foundation_Side extends LinearOpMode {
         left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        while (opModeIsActive() && Math.abs(integratedZ - degrees) >= 5) {
+        while (opModeIsActive() && Math.abs(integratedZ - degrees) >= allowedError) {
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
 
-            telemetry.addData("angle", integratedZ);
-            telemetry.addData("targ", degrees);
-            telemetry.update();
 
             if (degrees > 0 && integratedZ > degrees / 2) {
                 leftSpeed = -.25;
@@ -365,80 +483,6 @@ public class Foundation_Side extends LinearOpMode {
         driveAll(0);
 
     }
-
-
-
-
-
-
-    /*
-    public void moveEncoder(int ticks, double speed){
-
-        left_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        left_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-        left_back.setTargetPosition(ticks);
-        right_back.setTargetPosition(ticks);
-
-
-        left_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && (left_back.isBusy() || right_back.isBusy())) {
-            driveAll(speed);
-
-        }
-        driveAll(0);
-
-    }
-
-    public void strafeEncoder(double direction, int ticks, double speed){
-        left_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        left_front.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_front.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-        left_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        left_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-        if (direction == 1) {
-            left_front.setTargetPosition(ticks);
-            left_back.setTargetPosition(-ticks);
-            right_front.setTargetPosition(-ticks);
-            right_back.setTargetPosition(ticks);
-        }else if (direction == -1){
-            left_front.setTargetPosition(-ticks);
-            left_back.setTargetPosition(ticks);
-            right_front.setTargetPosition(ticks);
-            right_back.setTargetPosition(-ticks);
-        }
-
-
-        left_front.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        left_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_front.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && left_front.isBusy()) {
-            driveAll(speed);
-        }
-        driveAll(0);
-
-    }
-
-
-
-     */
-
-
 
 
     public void driveEach(double lf, double lb, double rf, double rb) {
@@ -456,6 +500,7 @@ public class Foundation_Side extends LinearOpMode {
         right_front.setPower(power);
         right_back.setPower(power);
     }
+
 
 
 
@@ -494,6 +539,7 @@ public class Foundation_Side extends LinearOpMode {
         }
     }
 
+
      */
 
 
@@ -501,28 +547,51 @@ public class Foundation_Side extends LinearOpMode {
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        CameraDevice.getInstance().setFlashTorchMode(true);
         phoneCam.openCameraDevice();
-
-
         skyStoneDetector = new SkystoneDetector();
-
         phoneCam.setPipeline(skyStoneDetector);
-
         phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
 
         while (opModeIsActive() && configuration == "Not Decided") {
+            while (skyStoneDetector.getScreenPosition().x == 0) {
+                telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
+                telemetry.update();
+            }
+            double xPos = skyStoneDetector.getScreenPosition().x;
 
+            double leftDist = Math.abs(284 - xPos);
+            double midDist = Math.abs(154 - xPos);
+            double rightDist = Math.abs(223 - xPos);
 
-            telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
-            telemetry.addData("Stone Position Y", skyStoneDetector.getScreenPosition().y);
+            String smallest = "";
+
+            if (leftDist < midDist) {
+                if (leftDist < rightDist) {
+                    smallest = "leftDist";
+                } else if (leftDist > rightDist) {
+                    smallest = "rightDist";
+                }
+            } else if (leftDist > midDist) {
+                if (midDist < rightDist) {
+                    smallest = "midDist";
+                } else if (midDist > rightDist) {
+                    smallest = "rightDist";
+                }
+            }
+
+            if (smallest == "leftDist") {
+                configuration = "A";
+                telemetry.addLine("left");
+            } else if (smallest == "midDist") {
+                configuration = "B";
+                telemetry.addLine("mid");
+            } else if (smallest == "rightDist") {
+                configuration = "C";
+                telemetry.addLine("right");
+            }
+
             telemetry.update();
-
-            String filename = "X_Positions.txt";
-            File file = AppUtil.getInstance().getSettingsFile(filename);
-            ReadWriteFile.writeFile(file, Double.toString(skyStoneDetector.getScreenPosition().x));
-
-
+            sleep(3000);
         }
         phoneCam.stopStreaming();
 

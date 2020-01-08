@@ -23,6 +23,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.teamcode.SkyStone.SkyStoneHardware;
+import org.opencv.core.Mat;
 
 
 @TeleOp(name = "Competition 2019")
@@ -37,6 +38,8 @@ public class CompetitionTeleOp extends OpMode {
     boolean accurateSpeed = false;
     double turnDivider = 1;
     double speedDivider = 1;
+    double legosTall = 0;
+    boolean resetSlide = false;
 
     ElapsedTime timeBetweenPress = new ElapsedTime();
 
@@ -81,14 +84,14 @@ public class CompetitionTeleOp extends OpMode {
         telemetry.addData("range", String.format("%.01f in", leftSideDist.getDistance(DistanceUnit.INCH)));
         telemetry.update();
 
-         */
 
+*/
         telemetry.addData("left", robot.Lencoder.getCurrentPosition());
         telemetry.addData("right", robot.Rencoder.getCurrentPosition());
         telemetry.update();
 
 
-        /*
+/*
 
         telemetry.addLine("Left");
         telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
@@ -107,27 +110,23 @@ public class CompetitionTeleOp extends OpMode {
         }
 
 
+        /*
         if (gamepad1.right_bumper) {
             robot.driveEach(.1, -.4, -.1, .4);
         } else if (gamepad1.left_bumper) {
             robot.driveEach(-.1, .4, .1, -.4);
         }
 
+         */
+
 
         //slow speed
-        if (timeBetweenPress.seconds() > .5) {
-            if (gamepad1.left_stick_button) {
-                if (!accurateSpeed) {
-                    accurateSpeed = true;
-                    speedDivider = 4;
-                    turnDivider = 4;
-                } else if (accurateSpeed) {
-                    accurateSpeed = false;
-                    speedDivider = 1;
-                    turnDivider = 1;
-                }
-                timeBetweenPress.reset();
-            }
+        if (gamepad1.right_bumper) {
+            speedDivider = 4;
+            turnDivider = 4;
+        } else if (gamepad1.left_bumper) {
+            speedDivider = 1;
+            turnDivider = 1;
         }
 
 
@@ -161,7 +160,7 @@ public class CompetitionTeleOp extends OpMode {
 
 
         //drivng
-        if (!gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.left_bumper && !gamepad1.right_bumper) {
+        if (!gamepad1.dpad_left && !gamepad1.dpad_right) {
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
             double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider;
             double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider;
@@ -173,10 +172,10 @@ public class CompetitionTeleOp extends OpMode {
 
         //flip back
         if (!(robot.linear_slide.getCurrentPosition() > 5)) {
-            if (gamepad2.dpad_down) {
+            if (gamepad2.dpad_right) {
                 robot.flipBackLeft.setTargetPosition(-300);
                 robot.flipBackRight.setTargetPosition(-300);
-            } else if (gamepad2.dpad_up) {
+            } else if (gamepad2.dpad_left) {
                 robot.flipBackLeft.setTargetPosition(0);
                 robot.flipBackRight.setTargetPosition(0);
             }
@@ -196,17 +195,34 @@ public class CompetitionTeleOp extends OpMode {
         //claw
         robot.front_claw.setPosition((1 - gamepad2.right_trigger) / 1.4);
 
+        if (timeBetweenPress.seconds() > .5) {
+            if (gamepad2.dpad_up) {
+                if (legosTall < 5) {
+                    legosTall += 1;
+                }
+            } else if (gamepad2.dpad_down) {
+                if (legosTall > 0) {
+                    legosTall -= 1;
+                }
+
+            }
+            timeBetweenPress.reset();
+        }
+
+//        telemetry.addData("Legos Tall",legosTall);
+        //      telemetry.update();
 
         //linear slide
-        if (gamepad1.right_trigger > 0) {
+        if (gamepad1.right_trigger > 0 && resetSlide == false) {
 
             if (robot.linear_slide.getCurrentPosition() < 3888) {
                 robot.linear_slide.setPower(gamepad1.right_trigger);
+
             } else {
                 robot.linear_slide.setPower(0);
             }
 
-        } else if (gamepad1.left_trigger > 0) {
+        } else if (gamepad1.left_trigger > 0 && resetSlide == false) {
 
             if (robot.linear_slide.getCurrentPosition() > 30) {
                 robot.linear_slide.setPower(-gamepad1.left_trigger);
@@ -215,7 +231,27 @@ public class CompetitionTeleOp extends OpMode {
             }
 
         } else {
-            robot.linear_slide.setPower(0);
+            if (resetSlide == false) {
+                robot.linear_slide.setPower(0);
+            }
+        }
+
+        if (gamepad1.x || resetSlide) {
+            resetSlide = true;
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.linear_slide.setTargetPosition(0);
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            double distance = Math.abs(0 - robot.linear_slide.getCurrentPosition());
+            double speed = .01;
+
+            robot.linear_slide.setPower(speed);
+
+            if (!robot.linear_slide.isBusy() || gamepad1.b) {
+                robot.linear_slide.setPower(0);
+                resetSlide = false;
+                robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
         }
 
 

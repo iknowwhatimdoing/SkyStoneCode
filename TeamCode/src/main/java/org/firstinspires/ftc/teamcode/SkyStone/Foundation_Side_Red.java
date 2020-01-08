@@ -10,16 +10,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.vuforia.CameraDevice;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
@@ -27,8 +21,8 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import java.io.File;
 
 
-@Autonomous(name = "Foundation Side")
-public class Foundation_Side extends LinearOpMode {
+@Autonomous(name = "Foundation Side (Red)")
+public class Foundation_Side_Red extends LinearOpMode {
 
     Servo frontClaw;
     DcMotor flipBackLeft;
@@ -88,7 +82,7 @@ public class Foundation_Side extends LinearOpMode {
 
 
         //strafe to align with the foundation
-        strafeEncoder(-18, .5);
+        strafeEncoder(18, .5);
 
         //Move forward to grab the foundation
         moveDistanceEncoder(26, .7);
@@ -122,7 +116,7 @@ public class Foundation_Side extends LinearOpMode {
 
 
         //Strafe under the bridge
-        strafeEncoder(44, .5);
+        strafeEncoder(-44, .5);
 
 
         //drive to where you can see the stones
