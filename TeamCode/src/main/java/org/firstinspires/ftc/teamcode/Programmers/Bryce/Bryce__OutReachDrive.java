@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "Outreach Movement")
+@TeleOp(name = "Outreach Movement (Outreach Bot)")
 //@Disabled
 
 public class Bryce__OutReachDrive extends OpMode {

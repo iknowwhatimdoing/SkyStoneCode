@@ -84,6 +84,13 @@ public class Foundation_Side_Red extends LinearOpMode {
         //strafe to align with the foundation
         strafeEncoder(18, .5);
 
+
+        /*
+        //wait 20 seconds before moving the foundation. (Changes per alliance)
+        sleep(20000);
+         */
+
+
         //Move forward to grab the foundation
         moveDistanceEncoder(26, .7);
 
@@ -176,14 +183,11 @@ public class Foundation_Side_Red extends LinearOpMode {
         }
 
          */
-
         //park on middle line
         //drive from the homing position
 
 
         //globalPositionUpdate.stop();
-
-
     }
 
 
@@ -361,80 +365,6 @@ public class Foundation_Side_Red extends LinearOpMode {
     }
 
 
-
-
-
-
-    /*
-    public void moveEncoder(int ticks, double speed){
-
-        left_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        left_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-        left_back.setTargetPosition(ticks);
-        right_back.setTargetPosition(ticks);
-
-
-        left_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && (left_back.isBusy() || right_back.isBusy())) {
-            driveAll(speed);
-
-        }
-        driveAll(0);
-
-    }
-
-    public void strafeEncoder(double direction, int ticks, double speed){
-        left_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        left_front.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_front.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-        left_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        left_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_back.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
-        if (direction == 1) {
-            left_front.setTargetPosition(ticks);
-            left_back.setTargetPosition(-ticks);
-            right_front.setTargetPosition(-ticks);
-            right_back.setTargetPosition(ticks);
-        }else if (direction == -1){
-            left_front.setTargetPosition(-ticks);
-            left_back.setTargetPosition(ticks);
-            right_front.setTargetPosition(ticks);
-            right_back.setTargetPosition(-ticks);
-        }
-
-
-        left_front.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        left_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_front.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_back.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while (opModeIsActive() && left_front.isBusy()) {
-            driveAll(speed);
-        }
-        driveAll(0);
-
-    }
-
-
-
-     */
-
-
-
-
     public void driveEach(double lf, double lb, double rf, double rb) {
         left_front.setPower(lf);
         left_back.setPower(lb);
@@ -520,61 +450,6 @@ public class Foundation_Side_Red extends LinearOpMode {
         }
         phoneCam.stopStreaming();
 
-    }
-
-
-    private void grabStone(String position) {
-
-
-        if (position == "left") {
-            //drive sideways left
-        } else if (position == "middle") {
-            //drive sideways to align
-        } else if (position == "right") {
-            //drive sideways right
-        }
-
-        //drive forward
-        //moveDistancePID(.5, 30);
-
-        // grab it
-
-        //back up
-        //moveDistancePID(.5,-30);
-
-        if (position == "left") {
-            //drive back
-        } else if (position == "middle") {
-            //drive back
-        } else if (position == "right") {
-            //drive back
-        }
-
-    }
-
-
-    private void placeOnFoundation() {
-        //back up more if needed
-
-        //turn based on witch side your on
-        //use distance sensor to see witch team your on an turn accordingly
-
-        //drive forward until reach the foundation
-        //wait till safe auto and test to find how to tell where the foundation is
-
-        //turn by how you need to
-
-        //drive forward
-
-        //drop
-
-        //dive back stuff
-    }
-
-
-    private void returnToHomingPosition() {
-        //maybe use vuforia to line self up with target
-        //add stuff late if needed
     }
 
 

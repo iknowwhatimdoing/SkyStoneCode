@@ -48,7 +48,7 @@ import java.util.Locale;
 
 
 @TeleOp(name = "Sensor: BNO055 IMU", group = "Sensor")
-//@Disabled                            // Comment this out to add to the opmode list
+@Disabled                            // Comment this out to add to the opmode list
 public class IMU_testing extends LinearOpMode {
 
     BNO055IMU imu;

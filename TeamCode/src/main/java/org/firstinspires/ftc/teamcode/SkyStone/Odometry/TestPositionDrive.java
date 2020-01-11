@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.SkyStone.Odometry;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinate
  * Created by Sarthak on 10/4/2019.
  */
 @TeleOp(name = "My Odometry OpMode")
+@Disabled
 public class TestPositionDrive extends LinearOpMode {
     //Drive motors
     DcMotor right_front, right_back, left_front, left_back;

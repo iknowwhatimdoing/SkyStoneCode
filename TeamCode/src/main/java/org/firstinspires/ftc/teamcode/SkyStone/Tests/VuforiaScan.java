@@ -53,7 +53,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 @TeleOp(name="Vuforia SKYSTONE Test")
-//@Disabled
+@Disabled
 public class VuforiaScan extends LinearOpMode {
 
 

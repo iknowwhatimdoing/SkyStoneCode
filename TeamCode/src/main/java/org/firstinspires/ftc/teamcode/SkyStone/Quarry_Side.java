@@ -104,11 +104,474 @@ public class Quarry_Side extends LinearOpMode {
         telemetry.update();
 
 
+        waitForStart();
+
+
+        //make sure the claw is up
+        frontClaw.setPosition(.7);
+        sleep(300);
+
+
+        /*
+        Stone 1
+         */
+        //Move close to the stone line
+        moveDistanceEncoder(23, .5);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        //move to be aligned with the left most stone. (no scanning for skystone yet)
+        strafeEncoder(-6, .5);
+
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+        /*
+        //long strafe
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        moveDistanceEncoder(-1, .5);    //move forward a little to get ready for the strafe
+        strafeEncoder(-27, .5);         //strafe halfway
+        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+        strafeEncoder(-27, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+
+
+         */
+
+
+        moveDistanceEncoder(-2, .85);//back up from stones
+        turnDegree(90, .5, 5);  //turn left 90 to drive
+        strafeEncoder(2, .5);  //strafe back to the stones
+        moveDistanceEncoder(60, .85); //move to the other side
+        turnDegree(-90, .5, 5); //turn 90 right to drop on platform
+        moveDistanceEncoder(6, .5); // move forward a little
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(250);
+        flipBackRight.setTargetPosition(250);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.6);
+            flipBackRight.setPower(.6);
+        }
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(300);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
 
 
 
 
 
+
+
+
+
+
+
+
+        /*
+        Go for stone 2
+         */
+        moveDistanceEncoder(-3, .5); // back up
+        turnDegree(-84, .3, 8); //turn right 90 to go back
+        moveDistanceEncoder(70, .85); // move to the stones side
+        //strafeEncoder(2,.5);  // to the side for the turn
+        turnDegree(86, .5, 5);  //turn to face stones
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        moveDistanceEncoder(4, .5); //move close to stone
+
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+        moveDistanceEncoder(-2, .85);//back up from stones
+        turnDegree(84, .5, 5);  //turn left 90 to drive
+        strafeEncoder(.5, .5);  //strafe back to the stones
+        moveDistanceEncoder(40, .85); //move to the other side
+        //turnDegree(-88,.85,5); //turn 90 right to drop
+        //moveDistanceEncoder(4,.7); // move forward a little
+
+
+        //   strafeEncoder(3,.5);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(300);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+        //park
+        moveDistanceEncoder(-7, .5); // back up
+
+        /*
+        turnDegree(-90,.5,5); //turn right 90 to go back
+        moveDistanceEncoder(60,.7); // move to the stones
+        strafeEncoder(3,.5);  // to the side for the turn
+        turnDegree(90,.5,5);  //turn to face stones
+        moveDistanceEncoder(3,.5); //move close to stone
+
+
+         */
+        /*
+
+
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+
+
+
+
+
+
+
+        moveDistanceEncoder(-3,.7);//back up from stones
+        turnDegree(90,.5,5);  //turn left 90 to drive
+        strafeEncoder(3,.5);  //strafe back to the stones
+        moveDistanceEncoder(66,.7); //move to the other side
+        turnDegree(-90,.5,5); //turn 90 right to drop
+        moveDistanceEncoder(1,.5); // move forward a little
+
+
+
+
+
+
+
+
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(1000);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+
+         */
+        /*
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(1000);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+        //stone 2
+        //long strafe
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        strafeEncoder(30, .5);         //strafe halfway
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+        strafeEncoder(30, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+
+
+        moveDistanceEncoder(1, .25);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+        moveDistanceEncoder(-1, .25);
+
+
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        strafeEncoder(-30, .5);         //strafe halfway
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+        strafeEncoder(-30, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(1000);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+        //stone 3
+        //long strafe
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        strafeEncoder(33, .5);         //strafe halfway
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+        strafeEncoder(33, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+
+
+        moveDistanceEncoder(1, .25);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+        moveDistanceEncoder(-1, .25);
+
+
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
+        strafeEncoder(-33, .5);         //strafe halfway
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+        strafeEncoder(-33, .5);      //strafe the rest of the way
+
+        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
+        turnDegree(disOff, .45, 1);     //turn by the amount off
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(1000);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+         */
+        //park
+        //strafeEncoder(20, .5);
+        //moveDistanceEncoder(3, .5);
+        /*
         waitForStart();
 
 
@@ -253,74 +716,7 @@ public class Quarry_Side extends LinearOpMode {
 
 
 
-
-        //36-38, long side against wall
-        //26-28, short side against wall
-        //
-
-
-        //scanCV();
-
-
-        //scan values   {(223/225), (154/197), (284/285)}
-
-
-
-        //collect the stones
-        /*
-        boolean skyStoneCollected = false;
-        boolean leftCollected = false;
-        boolean middleCollected = false;
-        boolean rightCollected = false;
-
-        while (opModeIsActive() && stonesLeft == true) {
-
-            if (!skyStoneCollected) {
-                if (configuration == "A") {
-                    grabStone("left");
-                    leftCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "B") {
-                    grabStone("middle");
-                    middleCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "C") {
-                    grabStone("right");
-                    skyStoneCollected = true;
-                    rightCollected = true;
-                }
-            } else {
-
-                if (!leftCollected) {
-                    grabStone("left");
-                    leftCollected = true;
-                } else if (!middleCollected) {
-                    grabStone("middle");
-                    middleCollected = true;
-                } else if (!rightCollected) {
-                    grabStone("right");
-                    rightCollected = true;
-                } else {
-                    stonesLeft = false;
-                }
-
-            }
-
-            if (stonesLeft == true) {
-                placeOnFoundation();
-
-                returnToHomingPosition();
-            }
-
-        }
-
          */
-
-        //park on middle line
-        //drive from the homing position
-
-
-        //globalPositionUpdate.stop();
 
 
     }
@@ -607,61 +1003,6 @@ public class Quarry_Side extends LinearOpMode {
         }
         phoneCam.stopStreaming();
 
-    }
-
-
-    private void grabStone(String position) {
-
-
-        if (position == "left") {
-            //drive sideways left
-        } else if (position == "middle") {
-            //drive sideways to align
-        } else if (position == "right") {
-            //drive sideways right
-        }
-
-        //drive forward
-        //moveDistancePID(.5, 30);
-
-        // grab it
-
-        //back up
-        //moveDistancePID(.5,-30);
-
-        if (position == "left") {
-            //drive back
-        } else if (position == "middle") {
-            //drive back
-        } else if (position == "right") {
-            //drive back
-        }
-
-    }
-
-
-    private void placeOnFoundation() {
-        //back up more if needed
-
-        //turn based on witch side your on
-        //use distance sensor to see witch team your on an turn accordingly
-
-        //drive forward until reach the foundation
-        //wait till safe auto and test to find how to tell where the foundation is
-
-        //turn by how you need to
-
-        //drive forward
-
-        //drop
-
-        //dive back stuff
-    }
-
-
-    private void returnToHomingPosition() {
-        //maybe use vuforia to line self up with target
-        //add stuff late if needed
     }
 
 
