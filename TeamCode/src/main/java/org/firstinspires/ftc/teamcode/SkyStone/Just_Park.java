@@ -27,12 +27,10 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import java.io.File;
 
 
-@Autonomous(name = "Foundation Side")
-public class Foundation_Side extends LinearOpMode {
+@Autonomous(name = "Just Park (Moves ~7in forward)")
+public class Just_Park extends LinearOpMode {
 
-    Servo frontClaw;
-    DcMotor flipBackLeft;
-    DcMotor flipBackRight;
+
 
     DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
     DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
@@ -45,11 +43,6 @@ public class Foundation_Side extends LinearOpMode {
     //OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
-    private OpenCvCamera phoneCam;
-    private SkystoneDetector skyStoneDetector;
-
-    private String configuration = "Not Decided";
-    private boolean stonesLeft = true;
 
     public IntegratingGyroscope gyro;
     public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
@@ -71,14 +64,7 @@ public class Foundation_Side extends LinearOpMode {
         telemetry.addLine("Gyro: Done calibrating");
         telemetry.update();
 
-        frontClaw = hardwareMap.get(Servo.class, "frontclaw");
 
-        flipBackLeft = hardwareMap.get(DcMotor.class, "left_flip");
-        flipBackRight = hardwareMap.get(DcMotor.class, "right_flip");
-
-        flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
@@ -87,113 +73,14 @@ public class Foundation_Side extends LinearOpMode {
         waitForStart();
 
 
-        //strafe to align with the foundation
-        strafeEncoder(-18, .5);
+        //moveDistanceEncoder(7,.5);
+
+        turnDegree(90,.8,2);
+        turnDegree(-90,.8,2);
+        turnDegree(90,.8,2);
+        turnDegree(-90,.8,2);
 
 
-        /*
-        //wait 20 seconds before moving the foundation. (Changes per alliance)
-        sleep(20000);
-         */
-
-        //Move forward to grab the foundation
-        moveDistanceEncoder(26, .7);
-
-
-        //Flip the slide forward to grab the foundation
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(350);
-        flipBackRight.setTargetPosition(350);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        //Back up to the wall with the foundation
-        moveDistanceEncoder(-26, .5);
-
-
-        //Flip the slide back to let go of the foundation
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-
-        //Strafe under the bridge
-        strafeEncoder(44, .5);
-
-
-        //drive to where you can see the stones
-        //moveDistancePID(.5,20);
-        //goToPosition(1,1,.5,0,.5);
-
-        //scan the stones
-        //scanCV();
-
-
-        //collect the stones
-        /*
-        boolean skyStoneCollected = false;
-        boolean leftCollected = false;
-        boolean middleCollected = false;
-        boolean rightCollected = false;
-
-        while (opModeIsActive() && stonesLeft == true) {
-
-            if (!skyStoneCollected) {
-                if (configuration == "A") {
-                    grabStone("left");
-                    leftCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "B") {
-                    grabStone("middle");
-                    middleCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "C") {
-                    grabStone("right");
-                    skyStoneCollected = true;
-                    rightCollected = true;
-                }
-            } else {
-
-                if (!leftCollected) {
-                    grabStone("left");
-                    leftCollected = true;
-                } else if (!middleCollected) {
-                    grabStone("middle");
-                    middleCollected = true;
-                } else if (!rightCollected) {
-                    grabStone("right");
-                    rightCollected = true;
-                } else {
-                    stonesLeft = false;
-                }
-
-            }
-
-            if (stonesLeft == true) {
-                placeOnFoundation();
-
-                returnToHomingPosition();
-            }
-
-        }
-
-         */
-
-        //park on middle line
-        //drive from the homing position
-
-
-        //globalPositionUpdate.stop();
 
 
     }
@@ -330,7 +217,8 @@ public class Foundation_Side extends LinearOpMode {
 
     }
 
-    public void turnDegree(double degrees, double speed) {
+
+    public void turnDegree(double degrees, double speed, double allowedError) {
         modernRoboticsI2cGyro.resetZAxisIntegrator();
         //double heading = modernRoboticsI2cGyro.getHeading();
         double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
@@ -351,19 +239,24 @@ public class Foundation_Side extends LinearOpMode {
         left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        while (opModeIsActive() && Math.abs(integratedZ - degrees) >= 5) {
+        while (opModeIsActive() && Math.abs(integratedZ - degrees) >= allowedError) {
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-
             telemetry.addData("angle", integratedZ);
-            telemetry.addData("targ", degrees);
+            telemetry.addData("speed", leftSpeed);
+            telemetry.addData("degrees", degrees);
             telemetry.update();
 
-            if (degrees > 0 && integratedZ > degrees / 2) {
-                leftSpeed = -.25;
-                rightSpeed = .25;
-            } else if (degrees < 0 && integratedZ > degrees / 2) {
-                leftSpeed = .25;
-                rightSpeed = -.25;
+
+            if (Math.abs(integratedZ) > Math.abs((degrees * 0.7))){
+                leftSpeed = -.2 * Math.signum(degrees);
+                rightSpeed = .2 * Math.signum(degrees);
+            }else if (degrees > 0 && integratedZ > degrees){
+                break;
+            }else if(degrees<0 && integratedZ < degrees){
+                break;
+            }else{
+                leftSpeed = speed * -1 * Math.signum(degrees);
+                rightSpeed = speed * Math.signum(degrees);
             }
             driveEach(leftSpeed, leftSpeed, rightSpeed, rightSpeed);
 
@@ -389,37 +282,6 @@ public class Foundation_Side extends LinearOpMode {
         right_back.setPower(power);
     }
 
-
-    private void scanCV() {
-
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        CameraDevice.getInstance().setFlashTorchMode(true);
-        phoneCam.openCameraDevice();
-
-
-        skyStoneDetector = new SkystoneDetector();
-
-        phoneCam.setPipeline(skyStoneDetector);
-
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
-
-        while (opModeIsActive() && configuration == "Not Decided") {
-
-
-            telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
-            telemetry.addData("Stone Position Y", skyStoneDetector.getScreenPosition().y);
-            telemetry.update();
-
-            String filename = "X_Positions.txt";
-            File file = AppUtil.getInstance().getSettingsFile(filename);
-            ReadWriteFile.writeFile(file, Double.toString(skyStoneDetector.getScreenPosition().x));
-
-
-        }
-        phoneCam.stopStreaming();
-
-    }
 
 
     private void initDriveHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName) {
@@ -464,26 +326,5 @@ public class Foundation_Side extends LinearOpMode {
         telemetry.update();
     }
 
-    /**
-     * Calculate the power in the x direction
-     *
-     * @param desiredAngle angle on the x axis
-     * @param speed        robot's speed
-     * @return the x vector
-     */
-    private double calculateX(double desiredAngle, double speed) {
-        return Math.sin(Math.toRadians(desiredAngle)) * speed;
-    }
-
-    /**
-     * Calculate the power in the y direction
-     *
-     * @param desiredAngle angle on the y axis
-     * @param speed        robot's speed
-     * @return the y vector
-     */
-    private double calculateY(double desiredAngle, double speed) {
-        return Math.cos(Math.toRadians(desiredAngle)) * speed;
-    }
 
 }

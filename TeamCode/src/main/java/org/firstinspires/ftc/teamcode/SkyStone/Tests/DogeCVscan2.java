@@ -2,26 +2,21 @@ package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 
 
 import com.disnodeteam.dogecv.detectors.skystone.SkystoneDetector;
-import com.disnodeteam.dogecv.detectors.skystone.StoneDetector;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.vuforia.CameraDevice;
 
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 
-import java.util.Locale;
 
-
-
-@TeleOp(name = "DogeCV Skystone test")
+@TeleOp(name = "DogeCV Skystone test (not mine)")
 @Disabled
-public class DogeCVscan extends LinearOpMode {
+public class DogeCVscan2 extends LinearOpMode {
 
     private OpenCvCamera phoneCam;
-    private OpenCV openCV;
+    private SkystoneDetector skystoneDetector;
 
 
     @Override
@@ -32,8 +27,8 @@ public class DogeCVscan extends LinearOpMode {
         phoneCam.openCameraDevice();
 
 
-        openCV = new OpenCV();
-        phoneCam.setPipeline(openCV);
+        skystoneDetector = new SkystoneDetector();
+        phoneCam.setPipeline(skystoneDetector);
 
 
 
@@ -47,7 +42,7 @@ public class DogeCVscan extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-            telemetry.addData("Left Point Pos", openCV.getResult());
+            telemetry.addData("Left Point Pos", skystoneDetector.getScreenPosition().x);
             telemetry.update();
         }
 

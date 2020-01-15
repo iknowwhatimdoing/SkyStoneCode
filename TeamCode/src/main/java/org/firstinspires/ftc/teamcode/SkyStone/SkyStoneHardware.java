@@ -42,9 +42,6 @@ public class SkyStoneHardware {
     public DistanceSensor frontLeftDist;
     public DistanceSensor frontRightDist;
 
-    public IntegratingGyroscope gyro;
-    public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
-
 
 
 
@@ -63,10 +60,6 @@ public class SkyStoneHardware {
         hwMap = ahwMap;
 
 
-        modernRoboticsI2cGyro = hwMap.get(ModernRoboticsI2cGyro.class, "gyro");
-        gyro = (IntegratingGyroscope)modernRoboticsI2cGyro;
-
-        modernRoboticsI2cGyro.calibrate();
 
 
 
@@ -104,10 +97,13 @@ public class SkyStoneHardware {
 
 
         // Initialize the sensors
+        /*
         rightSideDist = hwMap.get(DistanceSensor.class,"rightSideDist");
         leftSideDist = hwMap.get(DistanceSensor.class,"leftSideDist");
         frontLeftDist = hwMap.get(DistanceSensor.class,"frontLeftDist");
         frontRightDist = hwMap.get(DistanceSensor.class,"frontRightDist");
+
+         */
 
 
         right_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

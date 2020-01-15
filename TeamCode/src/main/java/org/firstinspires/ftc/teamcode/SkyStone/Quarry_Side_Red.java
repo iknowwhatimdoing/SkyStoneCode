@@ -583,10 +583,10 @@ public class Quarry_Side_Red extends LinearOpMode {
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
 
 
-            if (degrees > 0 && integratedZ > degrees / 2) {
+            if (degrees > 0 && integratedZ > degrees * (2/3)) {
                 leftSpeed = -.25;
                 rightSpeed = .25;
-            } else if (degrees < 0 && integratedZ > degrees / 2) {
+            } else if (degrees < 0 && integratedZ < degrees * (2/3)) {
                 leftSpeed = .25;
                 rightSpeed = -.25;
             }

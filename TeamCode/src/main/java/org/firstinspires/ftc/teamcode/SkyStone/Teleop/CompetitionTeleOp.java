@@ -40,6 +40,7 @@ public class CompetitionTeleOp extends OpMode {
     double speedDivider = 1;
     double legosTall = 0;
     boolean resetSlide = false;
+    boolean recalibrate = false;
 
     ElapsedTime timeBetweenPress = new ElapsedTime();
 
@@ -87,6 +88,29 @@ public class CompetitionTeleOp extends OpMode {
         telemetry.update();
 
          */
+
+
+
+        if (gamepad2.dpad_up){
+            while(!recalibrate) {
+                robot.flipBackRight.setTargetPosition(300);
+                robot.flipBackLeft.setTargetPosition(300);
+                robot.flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.flipBackRight.setPower(.3);
+                robot.flipBackLeft.setPower(.3);
+
+                if (!robot.flipBackLeft.isBusy()) {
+                    robot.flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    recalibrate = true;
+                }
+            }
+
+        }
+
+
+
 
         double driveforward = -gamepad1.left_stick_y;
         double driveSideways = gamepad1.left_stick_x;
@@ -145,9 +169,8 @@ public class CompetitionTeleOp extends OpMode {
 
             robot.driveEach(lfpower, lbpower, rfpower, rbpower);
         }
-        if (!gamepad1.dpad_left && !gamepad1.dpad_right) {
-            getCurrent = false;
-        }
+
+
 
 
         if (gamepad1.dpad_up || gamepad1.dpad_down) {
@@ -170,7 +193,7 @@ public class CompetitionTeleOp extends OpMode {
 
             robot.driveEach((1 * direction) / speedDivider - assist, (1 * direction) / speedDivider - assist, (1 * direction) / speedDivider + assist, (1 * direction) / speedDivider + assist);
         }
-        if (!gamepad1.dpad_up && !gamepad1.dpad_down) {
+        if (!gamepad1.dpad_up && !gamepad1.dpad_down && !gamepad1.dpad_up && !gamepad1.dpad_down) {
             getCurrent = false;
         }
 

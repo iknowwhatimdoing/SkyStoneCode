@@ -16,10 +16,14 @@ import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.vuforia.CameraDevice;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -28,13 +32,25 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 import java.io.File;
 import java.security.Policy;
+import java.util.List;
 
 
 @Autonomous(name = "Quarry Side")
 public class Quarry_Side extends LinearOpMode {
 
 
-    String foundationPos = "";
+    private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
+    private static final String LABEL_FIRST_ELEMENT = "Stone";
+    private static final String LABEL_SECOND_ELEMENT = "Skystone";
+
+    boolean posFound = false;
+    String pos = "";
+
+    private static final String VUFORIA_KEY =
+            "AeVN5hL/////AAABmeiiuuNfCUG7o7nFHIB8wOIJd0HGVkf4o9TQNISpW19DjyAqW6a1+DIXgQEWJlZoXbHJhjRNbpdhsZiyF8YZS7mSkspYXxB9vhRl3NdBzba6lb450R331LCujbFW4f1z5ZiERvZsxUn1bl8FeugGjQAag3tO7DU7ZNFMRVev0pTtIo0tIRtVlW1zmZqCAQCmCLtAUPjpUv2atadLfVqleYVydV3AN2upMHu14tb3zBuOmM2SfHu//Nuo8xh/U2a0Joi9B286UYurYN7S/+2mzpe6cFcqdDjVV7C3sjvHUw3ivtGy9M7BXwsVZkF/aSQr0cjDfTv/si4DW8lm/WLG5thfi2kHv/B21I2C67dt/oGI";
+
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
 
 
     public DistanceSensor rightSideDist;
@@ -58,11 +74,7 @@ public class Quarry_Side extends LinearOpMode {
     //OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
-    private OpenCvCamera phoneCam;
-    private SkystoneDetector skyStoneDetector;
 
-    private String configuration = "Not Decided";
-    private boolean stonesLeft = true;
 
     public IntegratingGyroscope gyro;
     public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
@@ -70,6 +82,18 @@ public class Quarry_Side extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        initVuforia();
+
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            initTfod();
+        } else {
+            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+        }
+
+
+
+
 
         initDriveHardwareMap(rfName, rbName, lfName, lbName, verticalLeftEncoderName, verticalRightEncoderName, horizontalEncoderName);
 
@@ -109,7 +133,7 @@ public class Quarry_Side extends LinearOpMode {
 
         //make sure the claw is up
         frontClaw.setPosition(.7);
-        sleep(300);
+        //sleep(300);
 
 
         /*
@@ -130,7 +154,31 @@ public class Quarry_Side extends LinearOpMode {
             flipBackRight.setPower(.4);
         }
 
-        //move to be aligned with the left most stone. (no scanning for skystone yet)
+
+        /*
+        String stonePattern = scanStonePosition();
+
+        switch (stonePattern){
+            case "A":
+                collectPatternA();
+                break;
+            case "B":
+                collectPatternB();
+                break;
+            case "C":
+                collectPatternC();
+                break;
+
+        }
+
+         */
+
+
+
+
+
+
+        //move to be aligned with the left most stone.
         strafeEncoder(-6, .5);
 
         //Move a little more forward to get close enough to the stone to grab it
@@ -138,7 +186,7 @@ public class Quarry_Side extends LinearOpMode {
 
         //Close the claw and wait for it to reach the closed position
         frontClaw.setPosition(0);
-        sleep(600);
+        sleep(550);
 
         //Flip the linear slide back into the robot
         flipBackLeft.setTargetPosition(0);
@@ -146,33 +194,41 @@ public class Quarry_Side extends LinearOpMode {
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
         }
 
+
+
+        moveDistanceEncoder(-2, .85);//back up from stones
+        turnDegree(90, .7, 5);  //turn left 90 to drive
+
+
+        strafeEncoder(2, .5);  //strafe back to the stones
+
+
         /*
-        //long strafe
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        moveDistanceEncoder(-1, .5);    //move forward a little to get ready for the strafe
-        strafeEncoder(-27, .5);         //strafe halfway
-        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-        strafeEncoder(-27, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-
+        switch (stonePattern){
+            case "A":
+                moveDistanceEncoder(60,.85);
+                break;
+            case "B":
+                moveDistanceEncoder(66,.85);
+                break;
+            case "C":
+                moveDistanceEncoder(75,.85);
+                break;
+        }
 
          */
 
 
-        moveDistanceEncoder(-2, .85);//back up from stones
-        turnDegree(90, .5, 5);  //turn left 90 to drive
-        strafeEncoder(2, .5);  //strafe back to the stones
-        moveDistanceEncoder(60, .85); //move to the other side
-        turnDegree(-90, .5, 5); //turn 90 right to drop on platform
-        moveDistanceEncoder(6, .5); // move forward a little
+
+        moveDistanceEncoder(76, .85); //move to the other side
+        turnDegree(-90, .7, 5); //turn 90 right to drop on platform
+
+
+        moveDistanceEncoder(6.5, .5); // move forward a little
 
 
         //flip the linear slide down
@@ -189,6 +245,38 @@ public class Quarry_Side extends LinearOpMode {
         //open claw
         frontClaw.setPosition(1);
         sleep(300);
+
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        moveDistanceEncoder(-.25,.5);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.5);
+            flipBackRight.setPower(.5);
+        }
+
+        moveDistanceEncoder(-5,.6);
+        foundationMovement(90,.8);
+
+
+
+
         //Flip the linear slide back into the robot
         flipBackLeft.setTargetPosition(0);
         flipBackRight.setTargetPosition(0);
@@ -199,12 +287,19 @@ public class Quarry_Side extends LinearOpMode {
             flipBackRight.setPower(.2);
         }
 
+        moveDistanceEncoder(6,.8);
+        strafeEncoder(15,.5);
+        moveDistanceEncoder(-10,.8);
 
 
 
 
 
 
+
+        while (opModeIsActive()){
+
+        }
 
 
 
@@ -214,10 +309,40 @@ public class Quarry_Side extends LinearOpMode {
         Go for stone 2
          */
         moveDistanceEncoder(-3, .5); // back up
-        turnDegree(-84, .3, 8); //turn right 90 to go back
+        turnDegree(-90, .6, 6); //turn right 90 to go back
+
+        strafeEncoder(-3,.5);
+
+
+
         moveDistanceEncoder(70, .85); // move to the stones side
         //strafeEncoder(2,.5);  // to the side for the turn
-        turnDegree(86, .5, 5);  //turn to face stones
+        turnDegree(90, .7, 5);  //turn to face stones
+
+
+        /*
+        switch (stonePattern){
+            case "A":
+                //collect the next skystone
+                moveDistanceEncoder(76,.86);
+                turnDegree(90,.5,1);
+                collectPatternA();
+                break;
+            case "B":
+                //collect the next skystone
+                moveDistanceEncoder(76,.85);
+                turnDegree(90,.5,1);
+                collectPatternB();
+                break;
+            case "C":
+                //collect the next stone in the row
+                moveDistanceEncoder(70,.85);
+                turnDegree(90,.5,1);
+                collectPatternB();
+                break;
+        }
+
+         */
 
 
         //flip the linear slide down
@@ -250,8 +375,36 @@ public class Quarry_Side extends LinearOpMode {
 
 
         moveDistanceEncoder(-2, .85);//back up from stones
-        turnDegree(84, .5, 5);  //turn left 90 to drive
+        turnDegree(90, .7, 5);  //turn left 90 to drive
+
+
         strafeEncoder(.5, .5);  //strafe back to the stones
+        //sleep(4500);
+
+
+
+        /*
+        switch (stonePattern){
+            case "A":
+                moveDistanceEncoder(76,.85);
+                turnDegree(-90,.5,1);
+                break;
+            case "B":
+                moveDistanceEncoder(82,.85);
+                turnDegree(-90,.5,1);
+                break;
+            case "C":
+                moveDistanceEncoder(70,.85);
+                turnDegree(-90,.5,1);
+                break;
+        }
+
+
+
+         */
+
+
+
         moveDistanceEncoder(40, .85); //move to the other side
         //turnDegree(-88,.85,5); //turn 90 right to drop
         //moveDistanceEncoder(4,.7); // move forward a little
@@ -282,6 +435,16 @@ public class Quarry_Side extends LinearOpMode {
             flipBackLeft.setPower(.2);
             flipBackRight.setPower(.2);
         }
+
+
+
+
+        /*
+        moveFoundation();
+        strafeEncoder(6,.5);
+        moveDistanceEncoder(-10,.85);
+
+         */
 
 
         //park
@@ -376,347 +539,7 @@ public class Quarry_Side extends LinearOpMode {
 
 
          */
-        /*
 
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(300);
-        flipBackRight.setTargetPosition(300);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        //open claw
-        frontClaw.setPosition(1);
-        sleep(1000);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-
-        //stone 2
-        //long strafe
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        strafeEncoder(30, .5);         //strafe halfway
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-        strafeEncoder(30, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-
-
-        moveDistanceEncoder(1, .25);
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(350);
-        flipBackRight.setTargetPosition(350);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        frontClaw.setPosition(0);
-        sleep(600);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-        moveDistanceEncoder(-1, .25);
-
-
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        strafeEncoder(-30, .5);         //strafe halfway
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-        strafeEncoder(-30, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(300);
-        flipBackRight.setTargetPosition(300);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        //open claw
-        frontClaw.setPosition(1);
-        sleep(1000);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-
-        //stone 3
-        //long strafe
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        strafeEncoder(33, .5);         //strafe halfway
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-        strafeEncoder(33, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-
-
-        moveDistanceEncoder(1, .25);
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(350);
-        flipBackRight.setTargetPosition(350);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        frontClaw.setPosition(0);
-        sleep(600);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-        moveDistanceEncoder(-1, .25);
-
-
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        strafeEncoder(-33, .5);         //strafe halfway
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-        strafeEncoder(-33, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45, 1);     //turn by the amount off
-
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(300);
-        flipBackRight.setTargetPosition(300);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        //open claw
-        frontClaw.setPosition(1);
-        sleep(1000);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-         */
-        //park
-        //strafeEncoder(20, .5);
-        //moveDistanceEncoder(3, .5);
-        /*
-        waitForStart();
-
-
-        frontClaw.setPosition(.7);
-        sleep(800);
-
-
-
-
-
-        //Move close to the stone line
-        moveDistanceEncoder(23, .5);
-
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(350);
-        flipBackRight.setTargetPosition(350);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-
-        //move to be aligned with the left most stone. (no scanning for skystone yet)
-        strafeEncoder(-6, .5);
-
-        //Move a little more forward to get close enough to the stone to grab it
-        moveDistanceEncoder(1.5, .25);
-
-        //Close the claw and wait for it to reach the closed position
-        frontClaw.setPosition(0);
-        sleep(600);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-
-        //long strafe
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        double savedRot = modernRoboticsI2cGyro.getIntegratedZValue();   //save rotation (0)
-        moveDistanceEncoder(-1, .5);    //move forward a little to get ready for the strafe
-        strafeEncoder(-20, .5);         //strafe halfway
-        double disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45,1);     //turn by the amount off
-        strafeEncoder(-24, .5);      //strafe the rest of the way
-
-        disOff = savedRot - modernRoboticsI2cGyro.getIntegratedZValue();   //get the amount it rotated during the strafe
-        turnDegree(disOff, .45,1);     //turn by the amount off
-
-        //Google Doc Code Here
-       moveDistanceEncoder(-1,.75);
-
-
-        //use distance sensor to find where the foundation is
-        while (opModeIsActive() && leftSideDist.getDistance(DistanceUnit.INCH) < 15) {
-            telemetry.addData("dist",leftSideDist.getDistance(DistanceUnit.INCH));
-            telemetry.update();
-            sleep(1500);
-        }
-        if ((leftSideDist.getDistance(DistanceUnit.INCH)) < 30) {
-            foundationPos = "shortOnWall";
-        } else {
-            foundationPos = "unMoved";
-        }
-
-        moveDistanceEncoder(1,.75);
-
-
-
-        switch (foundationPos){
-            case "shortOnWall":
-                turnDegree(90,.5,1);
-                moveDistanceEncoder(6.5, .5);
-                strafeEncoder(-4,.5);
-                break;
-            case "longOnWall":
-                turnDegree(90,.5,1);
-                moveDistanceEncoder(10,.7);
-                break;
-            case "unMoved":
-                //strafeEncoder(-10,.5);
-                break;
-        }
-
-
-        //flip the linear slide down
-        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flipBackLeft.setTargetPosition(300);
-        flipBackRight.setTargetPosition(300);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.4);
-            flipBackRight.setPower(.4);
-        }
-
-        //open claw
-        frontClaw.setPosition(1);
-        sleep(1000);
-
-        //Flip the linear slide back into the robot
-        flipBackLeft.setTargetPosition(0);
-        flipBackRight.setTargetPosition(0);
-        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
-            flipBackLeft.setPower(.2);
-            flipBackRight.setPower(.2);
-        }
-
-
-        //park on line
-        switch (foundationPos){
-            case "shortOnWall":
-
-                strafeEncoder(2,.5);
-                moveDistanceEncoder(-15,.5);
-                break;
-            case "longOnWall":
-                moveDistanceEncoder(-20,.7);
-                break;
-            case "unMoved":
-                //moveDistanceEncoder(3,.5);
-                strafeEncoder(20,.5);
-                moveDistanceEncoder(3,.5);
-                break;
-        }
-
-
-
-
-
-         */
 
 
     }
@@ -876,14 +699,22 @@ public class Quarry_Side extends LinearOpMode {
 
         while (opModeIsActive() && Math.abs(integratedZ - degrees) >= allowedError) {
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
+            telemetry.addData("angle", integratedZ);
+            telemetry.addData("speed", leftSpeed);
+            telemetry.addData("degrees", degrees);
+            telemetry.update();
 
 
-            if (degrees > 0 && integratedZ > degrees / 2) {
-                leftSpeed = -.25;
-                rightSpeed = .25;
-            } else if (degrees < 0 && integratedZ > degrees / 2) {
-                leftSpeed = .25;
-                rightSpeed = -.25;
+            if (Math.abs(integratedZ) > Math.abs((degrees * 0.7))){
+                leftSpeed = -.2 * Math.signum(degrees);
+                rightSpeed = .2 * Math.signum(degrees);
+            }else if (degrees > 0 && integratedZ > degrees){
+                break;
+            }else if(degrees<0 && integratedZ < degrees){
+                break;
+            }else{
+                leftSpeed = speed * -1 * Math.signum(degrees);
+                rightSpeed = speed * Math.signum(degrees);
             }
             driveEach(leftSpeed, leftSpeed, rightSpeed, rightSpeed);
 
@@ -891,6 +722,42 @@ public class Quarry_Side extends LinearOpMode {
         driveAll(0);
 
     }
+
+    public void foundationMovement(double rotation, double speed){
+        modernRoboticsI2cGyro.resetZAxisIntegrator();
+        double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
+        //right is positive
+
+        //modernRoboticsI2cGyro.resetZAxisIntegrator();
+
+        double leftSpeed = -speed;
+
+
+
+        right_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        right_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        while (opModeIsActive() && Math.abs(integratedZ - rotation) >= 2) {
+            integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
+
+
+            if (integratedZ > rotation / 2) {
+                leftSpeed = -.42;
+            }
+            driveEach(leftSpeed, leftSpeed, -.1, -.1);
+
+            if (integratedZ > rotation){
+                break;
+            }
+
+        }
+        driveAll(0);
+    }
+
+
+
 
 
     public void driveEach(double lf, double lb, double rf, double rb) {
@@ -910,6 +777,169 @@ public class Quarry_Side extends LinearOpMode {
     }
 
 
+    public String scanStonePosition(){
+
+        if (tfod != null) {
+            tfod.activate();
+        }
+
+        if (opModeIsActive()) {
+            while (opModeIsActive() && !posFound) {
+                if (tfod != null) {
+                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                    if (updatedRecognitions != null) {
+                        int i = 0;
+                        for (Recognition recognition : updatedRecognitions) {
+                            if (recognition.getLabel() == "Skystone") {
+                                if (recognition.getLeft() < 100) {
+                                    pos = "A";
+                                    posFound = true;
+                                } else if (recognition.getLeft() > 350) {
+                                    pos = "B";
+                                    posFound = true;
+                                }
+                            }
+
+                            if (posFound == false) {
+                                pos = "C";
+                                posFound = true;
+                            }
+                        }
+                        telemetry.update();
+                    }
+                }
+            }
+        }
+
+        if (tfod != null) {
+            tfod.shutdown();
+        }
+
+        return pos;
+    }
+
+    public void collectPatternA(){
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+
+        strafeEncoder(-6,.5);
+
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+
+
+    }
+    public void collectPatternB(){
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+    }
+    public void collectPatternC(){
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+
+        strafeEncoder(6,.5);
+
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+    }
+
+
+    public void moveFoundation(){
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+
+        moveDistanceEncoder(-5,.5);
+        foundationMovement(90,.5);
+        moveDistanceEncoder(5,.5);
+
+
+
+    }
 
 
 
@@ -951,59 +981,6 @@ public class Quarry_Side extends LinearOpMode {
      */
 
 
-    private void scanCV() {
-
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        phoneCam = new OpenCvInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        phoneCam.openCameraDevice();
-        skyStoneDetector = new SkystoneDetector();
-        phoneCam.setPipeline(skyStoneDetector);
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
-
-        while (opModeIsActive() && configuration == "Not Decided") {
-            while (skyStoneDetector.getScreenPosition().x == 0) {
-                telemetry.addData("Stone Position X", skyStoneDetector.getScreenPosition().x);
-                telemetry.update();
-            }
-            double xPos = skyStoneDetector.getScreenPosition().x;
-
-            double leftDist = Math.abs(284 - xPos);
-            double midDist = Math.abs(154 - xPos);
-            double rightDist = Math.abs(223 - xPos);
-
-            String smallest = "";
-
-            if (leftDist < midDist) {
-                if (leftDist < rightDist) {
-                    smallest = "leftDist";
-                } else if (leftDist > rightDist) {
-                    smallest = "rightDist";
-                }
-            } else if (leftDist > midDist) {
-                if (midDist < rightDist) {
-                    smallest = "midDist";
-                } else if (midDist > rightDist) {
-                    smallest = "rightDist";
-                }
-            }
-
-            if (smallest == "leftDist") {
-                configuration = "A";
-                telemetry.addLine("left");
-            } else if (smallest == "midDist") {
-                configuration = "B";
-                telemetry.addLine("mid");
-            } else if (smallest == "rightDist") {
-                configuration = "C";
-                telemetry.addLine("right");
-            }
-
-            telemetry.update();
-            sleep(3000);
-        }
-        phoneCam.stopStreaming();
-
-    }
 
 
     private void initDriveHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName) {
@@ -1068,6 +1045,31 @@ public class Quarry_Side extends LinearOpMode {
      */
     private double calculateY(double desiredAngle, double speed) {
         return Math.cos(Math.toRadians(desiredAngle)) * speed;
+    }
+
+
+
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minimumConfidence = 0.8;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
 }

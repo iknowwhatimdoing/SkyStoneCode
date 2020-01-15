@@ -80,15 +80,18 @@ public class Foundation_Side_Red extends LinearOpMode {
 
         waitForStart();
 
+        //moveDistanceEncoder(-7,.5);
+
+
 
         //strafe to align with the foundation
         strafeEncoder(18, .5);
 
 
-        /*
+
         //wait 20 seconds before moving the foundation. (Changes per alliance)
         sleep(20000);
-         */
+
 
 
         //Move forward to grab the foundation
@@ -108,7 +111,7 @@ public class Foundation_Side_Red extends LinearOpMode {
         }
 
         //Back up to the wall with the foundation
-        moveDistanceEncoder(-28, .7);
+        moveDistanceEncoder(-28, .5);
 
 
         //Flip the slide back to let go of the foundation
@@ -124,6 +127,23 @@ public class Foundation_Side_Red extends LinearOpMode {
 
         //Strafe under the bridge
         strafeEncoder(-44, .5);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         //drive to where you can see the stones
