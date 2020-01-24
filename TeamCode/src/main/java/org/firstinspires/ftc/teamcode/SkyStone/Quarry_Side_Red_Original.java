@@ -8,29 +8,26 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.util.ReadWriteFile;
-import com.vuforia.CameraDevice;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 
-import java.io.File;
+
+@Autonomous(name = "Quarry Side (Red)")
+public class Quarry_Side_Red_Original extends LinearOpMode {
 
 
-@Autonomous(name = "Just Park (Moves ~7in forward)")
-public class Just_Park extends LinearOpMode {
 
+    Servo odometryServo;
+    Servo capstone;
 
+    Servo frontClaw;
+    DcMotor flipBackLeft;
+    DcMotor flipBackRight;
 
     DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
     DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
@@ -43,6 +40,11 @@ public class Just_Park extends LinearOpMode {
     //OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
+    private OpenCvCamera phoneCam;
+    private SkystoneDetector skyStoneDetector;
+
+    private String configuration = "Not Decided";
+    private boolean stonesLeft = true;
 
     public IntegratingGyroscope gyro;
     public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
@@ -64,6 +66,17 @@ public class Just_Park extends LinearOpMode {
         telemetry.addLine("Gyro: Done calibrating");
         telemetry.update();
 
+        frontClaw = hardwareMap.get(Servo.class, "frontclaw");
+
+        flipBackLeft = hardwareMap.get(DcMotor.class, "left_flip");
+        flipBackRight = hardwareMap.get(DcMotor.class, "right_flip");
+
+        flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        odometryServo = hardwareMap.get(Servo.class, "odometryServo");
+        capstone = hardwareMap.get(Servo.class, "capstone");
 
 
         telemetry.addData("Status", "Init Complete");
@@ -72,8 +85,198 @@ public class Just_Park extends LinearOpMode {
 
         waitForStart();
 
+        odometryServo.setPosition(.5);
 
-        moveDistanceEncoder(7,.5);
+
+
+
+
+
+        //make sure the claw is up
+        frontClaw.setPosition(.7);
+
+
+        /*
+        Stone 1
+         */
+        //Move close to the stone line
+        moveDistanceEncoder(23, .5);
+
+
+        capstone.setPosition(.87);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+        //move to be aligned with the left most stone. (no scanning for skystone yet)
+        strafeEncoder(6, .5);
+
+        //Move a little more forward to get close enough to the stone to grab it
+        moveDistanceEncoder(1.5, .25);
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+
+
+
+        moveDistanceEncoder(-2, .85);//back up from stones
+        turnDegree(-90, .5, 5);  //turn left 90 to drive
+        strafeEncoder(-1, .5);  //strafe back to the stones
+        moveDistanceEncoder(60, .85); //move to the other side
+        turnDegree(90, .5, 5); //turn 90 right to drop on platform
+        moveDistanceEncoder(6, .5); // move forward a little
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(250);
+        flipBackRight.setTargetPosition(250);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.6);
+            flipBackRight.setPower(.6);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(300);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+
+
+
+
+
+
+
+
+
+
+
+        /*
+        Go for stone 2
+         */
+        moveDistanceEncoder(-3, .5); // back up
+        turnDegree(89, .7, 5); //turn left 90 to go back
+        moveDistanceEncoder(68, .85); // move to the stones side
+        //strafeEncoder(-2,.5);  // to the side for the turn
+        turnDegree(-89, .5, 5);  //turn to face stones
+
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+
+        moveDistanceEncoder(6, .5); //move close to stone
+
+
+        //Close the claw and wait for it to reach the closed position
+        frontClaw.setPosition(0);
+        sleep(600);
+        //Flip the linear slide back into the robot
+        flipBackLeft.setTargetPosition(0);
+        flipBackRight.setTargetPosition(0);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.2);
+            flipBackRight.setPower(.2);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+
+        moveDistanceEncoder(-2, .85);//back up from stones
+        turnDegree(-84, .5, 5);  //turn left 90 to drive
+        strafeEncoder(-.5, .5);  //strafe back to the stones
+        moveDistanceEncoder(40, .85); //move to the other side
+        //turnDegree(-88,.85,5); //turn 90 right to drop
+        //moveDistanceEncoder(4,.7); // move forward a little
+
+
+        //   strafeEncoder(-3,.5);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(300);
+        flipBackRight.setTargetPosition(300);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
+
+
+        //open claw
+        frontClaw.setPosition(1);
+        sleep(300);
+
+
+
+        //park
+        moveDistanceEncoder(-7, .5); // back up
+
+
+
+
+
+
+
+
     }
 
 
@@ -87,6 +290,7 @@ public class Just_Park extends LinearOpMode {
      * Methods
      *
      * --------------------------------------------------*/
+
 
 
     public void moveDistanceEncoder(double inches, double speed) {
@@ -156,7 +360,6 @@ public class Just_Park extends LinearOpMode {
 
 
     }
-
     public void strafeEncoder(double inches, double speed) {
         verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -195,6 +398,10 @@ public class Just_Park extends LinearOpMode {
                 power = .25;
             } else if (inches < 0 && horizontal.getCurrentPosition() <= (2 * (ticks / 3))) {
                 power = -.25;
+            }else if(inches > 0 && horizontal.getCurrentPosition() > ticks){
+                break;
+            }else if(inches < 0 && horizontal.getCurrentPosition() < ticks){
+                break;
             }
 
             // driveEach(leftPower, leftPower, rightPower, rightPower);
@@ -207,8 +414,6 @@ public class Just_Park extends LinearOpMode {
 
 
     }
-
-
     public void turnDegree(double degrees, double speed, double allowedError) {
         modernRoboticsI2cGyro.resetZAxisIntegrator();
         //double heading = modernRoboticsI2cGyro.getHeading();
@@ -238,14 +443,14 @@ public class Just_Park extends LinearOpMode {
             telemetry.update();
 
 
-            if (Math.abs(integratedZ) > Math.abs((degrees * 0.7))){
+            if (Math.abs(integratedZ) > Math.abs((degrees * 0.7))) {
                 leftSpeed = -.2 * Math.signum(degrees);
                 rightSpeed = .2 * Math.signum(degrees);
-            }else if (degrees > 0 && integratedZ > degrees){
+            } else if (degrees > 0 && integratedZ > degrees) {
                 break;
-            }else if(degrees<0 && integratedZ < degrees){
+            } else if (degrees < 0 && integratedZ < degrees) {
                 break;
-            }else{
+            } else {
                 leftSpeed = speed * -1 * Math.signum(degrees);
                 rightSpeed = speed * Math.signum(degrees);
             }
@@ -272,6 +477,48 @@ public class Just_Park extends LinearOpMode {
         right_front.setPower(power);
         right_back.setPower(power);
     }
+
+
+
+
+
+
+    /*
+    public void goToPosition(double targetXPos, double targetYPos, double power, double desiredRobotOrientation, double allowedDistanceError) {
+        targetXPos *= COUNTS_PER_INCH;
+        targetYPos *= COUNTS_PER_INCH;
+        allowedDistanceError *= COUNTS_PER_INCH;
+
+        double distanceToXTarget = targetXPos - globalPositionUpdate.returnXCoordinate();
+        double distanceToYTarget = targetYPos - globalPositionUpdate.returnYCoordinate();
+
+        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+        while (opModeIsActive() && distance > allowedDistanceError) {
+
+
+            distanceToXTarget = targetXPos - globalPositionUpdate.returnXCoordinate();
+            distanceToYTarget = targetYPos - globalPositionUpdate.returnYCoordinate();
+
+            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+
+
+            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
+
+            double robotMovementXComponent = calculateX(robotMovementAngle, power);
+            double robotMovementYComponent = calculateY(robotMovementAngle, power);
+            double pivotCorrection = desiredRobotOrientation - globalPositionUpdate.returnOrientation();
+
+            //may need to flip the signs for the pivotCorrection
+            left_front.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent + pivotCorrection), -1, 1));
+            left_back.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent + pivotCorrection), -1, 1));
+            right_front.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent - pivotCorrection), -1, 1));
+            right_back.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent - pivotCorrection), -1, 1));
+        }
+    }
+
+
+     */
+
 
 
 
@@ -317,5 +564,27 @@ public class Just_Park extends LinearOpMode {
         telemetry.update();
     }
 
+    /**
+     * Calculate the power in the x direction
+     *
+     * @param desiredAngle angle on the x axis
+     * @param speed        robot's speed
+     * @return the x vector
+     */
+    private double calculateX(double desiredAngle, double speed) {
+        return Math.sin(Math.toRadians(desiredAngle)) * speed;
+    }
+
+    /**
+     * Calculate the power in the y direction
+     *
+     * @param desiredAngle angle on the y axis
+     * @param speed        robot's speed
+     * @return the y vector
+     */
+    private double calculateY(double desiredAngle, double speed) {
+        return Math.cos(Math.toRadians(desiredAngle)) * speed;
+
+    }
 
 }

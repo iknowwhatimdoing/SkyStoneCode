@@ -8,18 +8,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.vuforia.CameraDevice;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
@@ -33,6 +29,12 @@ public class Foundation_Side extends LinearOpMode {
     Servo frontClaw;
     DcMotor flipBackLeft;
     DcMotor flipBackRight;
+
+    Servo foundationClampLeft;
+    Servo foundationClampRight;
+    DigitalChannel frontTouch;
+
+
 
     DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
     DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
@@ -80,24 +82,53 @@ public class Foundation_Side extends LinearOpMode {
         flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+
+        foundationClampLeft = hardwareMap.get(Servo.class, "foundationClampLeft");
+        foundationClampRight = hardwareMap.get(Servo.class, "foundationClampRight");
+
+        frontTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
+        frontTouch.setMode(DigitalChannel.Mode.INPUT);
+
+
+
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
 
 
         waitForStart();
 
+        foundationClampLeft.setPosition(.85);
+        foundationClampRight.setPosition(.6);
+
+        //moveDistanceEncoder(-7,.5);
+
+
 
         //strafe to align with the foundation
         strafeEncoder(-18, .5);
 
 
-        /*
+
         //wait 20 seconds before moving the foundation. (Changes per alliance)
-        sleep(20000);
-         */
+        //sleep(20000);
+
+
 
         //Move forward to grab the foundation
-        moveDistanceEncoder(26, .7);
+        //moveDistanceEncoder(26, .7);
+        //move until button pressed
+        ElapsedTime allowedMoveTime = new ElapsedTime();
+        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 5) {
+            driveAll(.25);
+        }
+        driveAll(.13);
+
+
+        foundationClampLeft.setPosition(.7);
+        foundationClampRight.setPosition(1);
+        sleep(300);
+
+        driveAll(0);
 
 
         //Flip the slide forward to grab the foundation
@@ -113,7 +144,7 @@ public class Foundation_Side extends LinearOpMode {
         }
 
         //Back up to the wall with the foundation
-        moveDistanceEncoder(-26, .5);
+        moveDistanceEncoder(-28, .5);
 
 
         //Flip the slide back to let go of the foundation
@@ -129,6 +160,23 @@ public class Foundation_Side extends LinearOpMode {
 
         //Strafe under the bridge
         strafeEncoder(44, .5);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         //drive to where you can see the stones
@@ -188,14 +236,11 @@ public class Foundation_Side extends LinearOpMode {
         }
 
          */
-
         //park on middle line
         //drive from the homing position
 
 
         //globalPositionUpdate.stop();
-
-
     }
 
 
@@ -388,6 +433,45 @@ public class Foundation_Side extends LinearOpMode {
         right_front.setPower(power);
         right_back.setPower(power);
     }
+
+
+
+
+
+    /*
+    public void goToPosition(double targetXPos, double targetYPos, double power, double desiredRobotOrientation, double allowedDistanceError) {
+        targetXPos *= COUNTS_PER_INCH;
+        targetYPos *= COUNTS_PER_INCH;
+        allowedDistanceError *= COUNTS_PER_INCH;
+
+        double distanceToXTarget = targetXPos - globalPositionUpdate.returnXCoordinate();
+        double distanceToYTarget = targetYPos - globalPositionUpdate.returnYCoordinate();
+
+        double distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+        while (opModeIsActive() && distance > allowedDistanceError) {
+
+
+            distanceToXTarget = targetXPos - globalPositionUpdate.returnXCoordinate();
+            distanceToYTarget = targetYPos - globalPositionUpdate.returnYCoordinate();
+
+            distance = Math.hypot(distanceToXTarget, distanceToYTarget);
+
+
+            double robotMovementAngle = Math.toDegrees(Math.atan2(distanceToXTarget, distanceToYTarget));
+
+            double robotMovementXComponent = calculateX(robotMovementAngle, power);
+            double robotMovementYComponent = calculateY(robotMovementAngle, power);
+            double pivotCorrection = desiredRobotOrientation - globalPositionUpdate.returnOrientation();
+
+            //may need to flip the signs for the pivotCorrection
+            left_front.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent + pivotCorrection), -1, 1));
+            left_back.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent + pivotCorrection), -1, 1));
+            right_front.setPower(Range.clip((-robotMovementXComponent + robotMovementYComponent - pivotCorrection), -1, 1));
+            right_back.setPower(Range.clip((robotMovementXComponent + robotMovementYComponent - pivotCorrection), -1, 1));
+        }
+    }
+
+     */
 
 
     private void scanCV() {

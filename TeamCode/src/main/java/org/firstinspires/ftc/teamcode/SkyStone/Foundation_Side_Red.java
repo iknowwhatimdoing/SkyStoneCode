@@ -8,8 +8,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import com.vuforia.CameraDevice;
 
@@ -27,6 +29,12 @@ public class Foundation_Side_Red extends LinearOpMode {
     Servo frontClaw;
     DcMotor flipBackLeft;
     DcMotor flipBackRight;
+
+    Servo foundationClampLeft;
+    Servo foundationClampRight;
+    DigitalChannel frontTouch;
+
+
 
     DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
     DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
@@ -74,11 +82,23 @@ public class Foundation_Side_Red extends LinearOpMode {
         flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+
+        foundationClampLeft = hardwareMap.get(Servo.class, "foundationClampLeft");
+        foundationClampRight = hardwareMap.get(Servo.class, "foundationClampRight");
+
+        frontTouch = hardwareMap.get(DigitalChannel.class, "sensor_digital");
+        frontTouch.setMode(DigitalChannel.Mode.INPUT);
+
+
+
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
 
 
         waitForStart();
+
+        foundationClampLeft.setPosition(.85);
+        foundationClampRight.setPosition(.6);
 
         //moveDistanceEncoder(-7,.5);
 
@@ -90,12 +110,24 @@ public class Foundation_Side_Red extends LinearOpMode {
 
 
         //wait 20 seconds before moving the foundation. (Changes per alliance)
-        sleep(20000);
+        //sleep(20000);
 
 
 
         //Move forward to grab the foundation
-        moveDistanceEncoder(26, .7);
+        //moveDistanceEncoder(26, .7);
+        //move until button pressed
+        ElapsedTime allowedMoveTime = new ElapsedTime();
+        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 5) {
+            driveAll(.25);
+        }
+        driveAll(.13);
+
+
+
+        sleep(300);
+
+        driveAll(0);
 
 
         //Flip the slide forward to grab the foundation
@@ -111,7 +143,7 @@ public class Foundation_Side_Red extends LinearOpMode {
         }
 
         //Back up to the wall with the foundation
-        moveDistanceEncoder(-28, .5);
+        moveDistanceEncoder(-32, .8);
 
 
         //Flip the slide back to let go of the foundation
@@ -126,88 +158,24 @@ public class Foundation_Side_Red extends LinearOpMode {
 
 
         //Strafe under the bridge
-        strafeEncoder(-44, .5);
+        strafeEncoder(-30, .5);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //drive to where you can see the stones
-        //moveDistancePID(.5,20);
-        //goToPosition(1,1,.5,0,.5);
-
-        //scan the stones
-        //scanCV();
-
-
-        //collect the stones
-        /*
-        boolean skyStoneCollected = false;
-        boolean leftCollected = false;
-        boolean middleCollected = false;
-        boolean rightCollected = false;
-
-        while (opModeIsActive() && stonesLeft == true) {
-
-            if (!skyStoneCollected) {
-                if (configuration == "A") {
-                    grabStone("left");
-                    leftCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "B") {
-                    grabStone("middle");
-                    middleCollected = true;
-                    skyStoneCollected = true;
-                } else if (configuration == "C") {
-                    grabStone("right");
-                    skyStoneCollected = true;
-                    rightCollected = true;
-                }
-            } else {
-
-                if (!leftCollected) {
-                    grabStone("left");
-                    leftCollected = true;
-                } else if (!middleCollected) {
-                    grabStone("middle");
-                    middleCollected = true;
-                } else if (!rightCollected) {
-                    grabStone("right");
-                    rightCollected = true;
-                } else {
-                    stonesLeft = false;
-                }
-
-            }
-
-            if (stonesLeft == true) {
-                placeOnFoundation();
-
-                returnToHomingPosition();
-            }
-
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
         }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
 
-         */
-        //park on middle line
-        //drive from the homing position
+        frontClaw.setPosition(1);
 
-
-        //globalPositionUpdate.stop();
+        strafeEncoder(-14,.5);
     }
 
 
@@ -329,6 +297,10 @@ public class Foundation_Side_Red extends LinearOpMode {
                 power = .25;
             } else if (inches < 0 && horizontal.getCurrentPosition() <= (2 * (ticks / 3))) {
                 power = -.25;
+            } else if (inches > 0 && horizontal.getCurrentPosition() > ticks) {
+                break;
+            } else if (inches < 0 && horizontal.getCurrentPosition() < ticks) {
+                break;
             }
 
             // driveEach(leftPower, leftPower, rightPower, rightPower);

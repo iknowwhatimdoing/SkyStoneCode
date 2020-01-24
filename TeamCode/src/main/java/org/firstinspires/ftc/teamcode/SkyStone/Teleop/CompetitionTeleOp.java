@@ -42,12 +42,34 @@ public class CompetitionTeleOp extends OpMode {
     boolean resetSlide = false;
     boolean recalibrate = false;
 
-    ElapsedTime timeBetweenPress = new ElapsedTime();
+    boolean linearSlideDone = true;
+
+
+    boolean clawOpen = true;
+    ElapsedTime clickTime = new ElapsedTime();
+
+
+    Servo odometryServo;
+    Servo capstone;
+
+
+    ElapsedTime timeBetweenCapDrop = new ElapsedTime();
+    boolean capdropperDown = false;
+
+    boolean flippedBack = false;
+    ElapsedTime timeForFlip = new ElapsedTime();
+
+    //ElapsedTime runTime = new ElapsedTime();
 
 
     @Override
     public void init() {
-        robot.init(hardwareMap);
+        robot.init(hardwareMap, false);
+        odometryServo = hardwareMap.get(Servo.class, "odometryServo");
+
+        capstone = hardwareMap.get(Servo.class, "capstone");
+
+
     }
 
     @Override
@@ -60,6 +82,7 @@ public class CompetitionTeleOp extends OpMode {
         robot.flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
+
         robot.flipBackLeft.setTargetPosition(0);
         robot.flipBackRight.setTargetPosition(0);
         robot.flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -67,6 +90,11 @@ public class CompetitionTeleOp extends OpMode {
 
         robot.flipBackLeft.setPower(1);
         robot.flipBackRight.setPower(1);
+
+        odometryServo.setPosition(1);
+        robot.front_claw.setPosition(.71428);
+
+
     }
 
     @Override
@@ -75,13 +103,16 @@ public class CompetitionTeleOp extends OpMode {
         robot.angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
 
+
+
+        /*
         telemetry.addData("left", robot.Lencoder.getCurrentPosition());
         telemetry.addData("right", robot.Rencoder.getCurrentPosition());
         telemetry.addData("horizontal", robot.Hencoder.getCurrentPosition());
         telemetry.update();
 
 
-        /*
+
 
         telemetry.addLine("Left");
         telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
@@ -90,15 +121,17 @@ public class CompetitionTeleOp extends OpMode {
          */
 
 
+        //flip the linear slide up if it didn't flip in autonomous. Must hold the button for 2 seconds
+        ElapsedTime holdToReset = new ElapsedTime();
+        if (gamepad2.back) {
 
-        if (gamepad2.dpad_up){
-            while(!recalibrate) {
+            while (!recalibrate) {
                 robot.flipBackRight.setTargetPosition(300);
                 robot.flipBackLeft.setTargetPosition(300);
                 robot.flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.flipBackRight.setPower(.3);
-                robot.flipBackLeft.setPower(.3);
+                robot.flipBackRight.setPower(.5);
+                robot.flipBackLeft.setPower(.5);
 
                 if (!robot.flipBackLeft.isBusy()) {
                     robot.flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -106,21 +139,16 @@ public class CompetitionTeleOp extends OpMode {
                     recalibrate = true;
                 }
             }
-
+        } else {
+            holdToReset.reset();
         }
-
-
 
 
         double driveforward = -gamepad1.left_stick_y;
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
-        if (gamepad2.x) {
-            robot.grabServo.setPosition(.75);
-        } else if (gamepad2.b) {
-            robot.grabServo.setPosition(1);
-        }
+
 
 
         /*
@@ -136,7 +164,7 @@ public class CompetitionTeleOp extends OpMode {
         //slow speed
         if (gamepad1.right_bumper) {
             speedDivider = 4;
-            turnDivider = 4;
+            turnDivider = 2;
         } else if (gamepad1.left_bumper) {
             speedDivider = 1;
             turnDivider = 1;
@@ -155,12 +183,12 @@ public class CompetitionTeleOp extends OpMode {
 
             robot.angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double difference = current - robot.angles.firstAngle;
-            assist = difference / 40;
+            assist = difference / 15;
 
             if (gamepad1.dpad_left) {
-                driveSideways = -.5;
+                driveSideways = -1;
             } else if (gamepad1.dpad_right) {
-                driveSideways = .5;
+                driveSideways = 1;
             }
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider - assist;
             double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider - assist;
@@ -169,8 +197,6 @@ public class CompetitionTeleOp extends OpMode {
 
             robot.driveEach(lfpower, lbpower, rfpower, rbpower);
         }
-
-
 
 
         if (gamepad1.dpad_up || gamepad1.dpad_down) {
@@ -215,12 +241,19 @@ public class CompetitionTeleOp extends OpMode {
         //flip back
         //-----------------------------
         if (!(robot.linear_slide.getCurrentPosition() > 5)) {
-            if (gamepad2.dpad_right) {
-                robot.flipBackLeft.setTargetPosition(-300);
-                robot.flipBackRight.setTargetPosition(-300);
-            } else {
-                robot.flipBackLeft.setTargetPosition(0);
-                robot.flipBackRight.setTargetPosition(0);
+            if (gamepad2.dpad_right && timeForFlip.seconds() > .5) {
+
+                if (flippedBack) {
+                    robot.flipBackLeft.setTargetPosition(0);
+                    robot.flipBackRight.setTargetPosition(0);
+                    flippedBack = false;
+                } else if (!flippedBack) {
+                    robot.flipBackLeft.setTargetPosition(-300);
+                    robot.flipBackRight.setTargetPosition(-300);
+                    flippedBack = true;
+                }
+
+                timeForFlip.reset();
             }
 
             robot.flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -238,7 +271,33 @@ public class CompetitionTeleOp extends OpMode {
         //-----------------------------
         //claw
         //-----------------------------
-        robot.front_claw.setPosition((1 - gamepad2.right_trigger) / 1.4);
+        //robot.front_claw.setPosition((1 - gamepad1.right_trigger) / 1.4);
+
+        if (gamepad1.right_trigger > 0 && clickTime.milliseconds() > 500) {
+            if (clawOpen) {
+                robot.front_claw.setPosition(0);
+                clawOpen = false;
+            } else if (!clawOpen) {
+                robot.front_claw.setPosition(.71428);
+                clawOpen = true;
+            }
+            clickTime.reset();
+        }
+
+
+        //drop capstone
+        if (timeBetweenCapDrop.seconds() > .5) {
+            if (gamepad2.y) {
+                if (capdropperDown) {
+                    capstone.setPosition(.87);
+                    capdropperDown = false;
+                } else if (!capdropperDown) {
+                    capstone.setPosition(.4);
+                    capdropperDown = true;
+                }
+                timeBetweenCapDrop.reset();
+            }
+        }
 
 
 
@@ -257,9 +316,26 @@ public class CompetitionTeleOp extends OpMode {
             }
         }
 
-        //      telemetry.addData("Legos Tall",legosTall);
-        //      telemetry.update();
+        telemetry.addData("Legos Tall", legosTall);
+        telemetry.update();
 
+
+        if (gamepad2.y || !linearSlideDone){
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            int targPos = (int) (legosTall * 800);
+            robot.linear_slide.setTargetPosition(targPos);
+
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            if (robot.linear_slide.isBusy()) {
+                linearSlideDone = false;
+                robot.linear_slide.setPower(1);
+            }else if (!robot.linear_slide.isBusy()){
+                linearSlideDone = true;
+                robot.linear_slide.setPower(0);
+            }
+        }
 
          */
 
@@ -267,19 +343,23 @@ public class CompetitionTeleOp extends OpMode {
         //-----------------------------
         //linear slide
         //-----------------------------
-        if (gamepad1.right_trigger > 0 && resetSlide == false) {
+        if (gamepad2.right_trigger > 0 && !resetSlide) {
+
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             if (robot.linear_slide.getCurrentPosition() < 3888) {
-                robot.linear_slide.setPower(gamepad1.right_trigger);
+                robot.linear_slide.setPower(gamepad2.right_trigger);
 
             } else {
                 robot.linear_slide.setPower(0);
             }
 
-        } else if (gamepad1.left_trigger > 0 && resetSlide == false) {
+        } else if (gamepad2.left_trigger > 0 && !resetSlide) {
+
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             if (robot.linear_slide.getCurrentPosition() > 30) {
-                robot.linear_slide.setPower(-gamepad1.left_trigger);
+                robot.linear_slide.setPower(-gamepad2.left_trigger);
             } else {
                 robot.linear_slide.setPower(0);
             }
@@ -291,7 +371,7 @@ public class CompetitionTeleOp extends OpMode {
         }
 
         //reset linear slide
-        if (gamepad1.x || resetSlide) {
+        if (gamepad2.x || resetSlide) {
             resetSlide = true;
             robot.linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.linear_slide.setTargetPosition(0);
@@ -309,20 +389,27 @@ public class CompetitionTeleOp extends OpMode {
             robot.linear_slide.setPower(speed);
 
 
-            if (distance < 5 || !robot.linear_slide.isBusy() || gamepad1.b) {
+            if (distance < 5 || !robot.linear_slide.isBusy() || gamepad2.b) {
                 robot.linear_slide.setPower(0);
                 resetSlide = false;
                 robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
         }
 
-        if (gamepad2.x) {
+        //fix flip back jiggle
+        if (gamepad2.dpad_left) {
             if (robot.flipBackLeft.getCurrentPosition() < 10) {
                 robot.flipBackRight.setPower(0);
                 robot.flipBackLeft.setPower(0);
                 robot.flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
+        }
+
+
+        if (gamepad2.a) {
+            speedDivider = 3;
+            turnDivider = 1.5;
         }
 
 

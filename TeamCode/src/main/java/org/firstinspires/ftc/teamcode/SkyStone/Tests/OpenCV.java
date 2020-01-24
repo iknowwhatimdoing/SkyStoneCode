@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 
 import android.util.Log;
+
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.DogeCVDetector;
 import com.disnodeteam.dogecv.filters.CbColorFilter;
@@ -33,8 +34,8 @@ public class OpenCV extends DogeCVDetector {
     public DogeCVColorFilter yellowFilter = new LeviColorFilter(LeviColorFilter.ColorPreset.YELLOW, 70); //Default Yellow blackFilter
 
     public RatioScorer ratioScorer = new RatioScorer(1.25, 3); // Used to find the short face of the stone
-    public MaxAreaScorer maxAreaScorer = new MaxAreaScorer( 0.01);                    // Used to find largest objects
-    public PerfectAreaScorer perfectAreaScorer = new PerfectAreaScorer(5000,0.05); // Used to find objects near a tuned area value
+    public MaxAreaScorer maxAreaScorer = new MaxAreaScorer(0.01);                    // Used to find largest objects
+    public PerfectAreaScorer perfectAreaScorer = new PerfectAreaScorer(5000, 0.05); // Used to find objects near a tuned area value
 
 
     // Results of the detector
@@ -45,13 +46,12 @@ public class OpenCV extends DogeCVDetector {
     private Point matchLoc;
 
 
-
     private Mat rawImage = new Mat();
     private Mat workingMat = new Mat();
     private Mat displayMat = new Mat();
     private Mat blackMask = new Mat();
     private Mat yellowMask = new Mat();
-    private Mat hierarchy  = new Mat();
+    private Mat hierarchy = new Mat();
     private Mat workTemp = new Mat();
     private Mat templateImg = Imgcodecs.imread("C:\\Users\\Alek\\Documents\\GitCode\\SkyStone\\TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\SkyStone\\Tests\\Images\\size.PNG");
     private Mat edge = new Mat();
@@ -61,7 +61,6 @@ public class OpenCV extends DogeCVDetector {
     public Point getScreenPosition() {
         return screenPosition;
     }
-
 
 
     public Rect foundRectangle() {
@@ -82,25 +81,61 @@ public class OpenCV extends DogeCVDetector {
         templateImg.copyTo(workTemp);
 
 
-        //Imgproc.GaussianBlur(workingMat,workingMat,new Size(5,5),0);
-        //Imgproc.Canny(workingMat, edge,50,150);
-        //Imgcodecs.imwrite("Images", edge);
-
-        int w= templateImg.width();
-        int h = templateImg.height();
 
 
-        if (templateImg.type() == workingMat.type()) {
-            Imgproc.matchTemplate(workingMat, templateImg, matchRes, Imgproc.TM_SQDIFF);
-            Core.MinMaxLocResult mmr = Core.minMaxLoc(matchRes);
 
-            matchLoc = mmr.minLoc;
+        int y = 100;
+        int x = 20;
+        int h = 100;
+        int w = 850;
+
+
+        //Mat crop = workingMat[y: y+h, x: x+w];
+        Mat uncropped = workingMat;
+        Rect roi = new Rect(x, y, w, h);
+        Mat cropped = new Mat(uncropped, roi);
+
+        Mat image = new Mat();
+
+        Imgproc.cvtColor(cropped, image, Imgproc.COLOR_BGR2HSV);
+
+        Scalar list = new Scalar(0,0,0);
+
+
+        Mat mask = new Mat();
+        ArrayList<MatOfPoint> bluecnts = new ArrayList<MatOfPoint>();
+        Core.inRange(image,list,list, mask);
+
+        Mat newMask = new Mat();
+        mask.copyTo(newMask);
+        Imgproc.findContours(newMask, bluecnts, newMask, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        /*
+        if (bluecnts.size() > 0){
+            ArrayList blue_area = new ArrayList();
+            blue_area = max(bluecnts, Imgproc.contourArea(newMask));
+            (xg,yg,wg,hg) = Imgproc.boundingRect(s)
         }
 
+         */
+
+
+
+
+
+
+
+
+
+
+
+
         return edge;
+
+
     }
 
-    public Point getResult(){
+    public Point getResult() {
         return matchLoc;
     }
 
@@ -109,11 +144,11 @@ public class OpenCV extends DogeCVDetector {
         addScorer(ratioScorer);
 
         // Add diffrent scorers depending on the selected mode
-        if(areaScoringMethod == DogeCV.AreaScoringMethod.MAX_AREA){
+        if (areaScoringMethod == DogeCV.AreaScoringMethod.MAX_AREA) {
             addScorer(maxAreaScorer);
         }
 
-        if (areaScoringMethod == DogeCV.AreaScoringMethod.PERFECT_AREA){
+        if (areaScoringMethod == DogeCV.AreaScoringMethod.PERFECT_AREA) {
             addScorer(perfectAreaScorer);
         }
     }

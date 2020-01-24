@@ -37,42 +37,41 @@ public class SkyStoneHardware {
     public Servo front_claw;
     public Servo grabServo;
 
+    /*
     public DistanceSensor rightSideDist;
     public DistanceSensor leftSideDist;
     public DistanceSensor frontLeftDist;
     public DistanceSensor frontRightDist;
 
-
-
+     */
 
 
     /* local OpMode members. */
-    HardwareMap hwMap =  null;
+    HardwareMap hwMap = null;
 
     /* Constructor */
-    public SkyStoneHardware(){
+    public SkyStoneHardware() {
 
     }
 
     /* Initialize standard Hardware interfaces */
-    public void init(HardwareMap ahwMap) {
+    public void init(HardwareMap ahwMap, boolean quick) {
         // Save reference to Hardware map
         hwMap = ahwMap;
 
 
-
-
-
-        // Initialize the IMU
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled = true;
-        parameters.loggingTag = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        imu = hwMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+        if (!quick) {
+            // Initialize the IMU
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            parameters.loggingEnabled = true;
+            parameters.loggingTag = "IMU";
+            parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+            imu = hwMap.get(BNO055IMU.class, "imu");
+            imu.initialize(parameters);
+        }
 
 
         // Initialize the Motors and encoders
@@ -80,7 +79,7 @@ public class SkyStoneHardware {
         right_front = hwMap.get(DcMotor.class, "right_front");
         left_back = hwMap.get(DcMotor.class, "left_back");
         right_back = hwMap.get(DcMotor.class, "right_back");
-        Lencoder = hwMap.get(DcMotor.class,"left_front");
+        Lencoder = hwMap.get(DcMotor.class, "left_front");
         Rencoder = hwMap.get(DcMotor.class, "right_front");
         Hencoder = hwMap.get(DcMotor.class, "right_back");
 
@@ -93,7 +92,7 @@ public class SkyStoneHardware {
 
         front_claw = hwMap.get(Servo.class, "frontclaw");
 
-        grabServo = hwMap.get(Servo.class,"grabServo");
+        grabServo = hwMap.get(Servo.class, "grabServo");
 
 
         // Initialize the sensors
@@ -142,9 +141,6 @@ public class SkyStoneHardware {
         //skystoneArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-
-
-
         // Set all motors to zero power
         driveAll(0);
         flipBackLeft.setPower(0);
@@ -154,9 +150,7 @@ public class SkyStoneHardware {
     }
 
 
-
-
-    public void driveEach(double lf, double lb, double rf, double rb){
+    public void driveEach(double lf, double lb, double rf, double rb) {
 
         left_front.setPower(lf);
         left_back.setPower(lb);
@@ -164,7 +158,7 @@ public class SkyStoneHardware {
         right_back.setPower(rb);
     }
 
-    public void driveAll(double power){
+    public void driveAll(double power) {
         left_front.setPower(power);
         left_back.setPower(power);
         right_front.setPower(power);

@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -43,10 +44,9 @@ import java.util.List;
 
 
 @TeleOp(name = "TensorFlow Test")
-//@Disabled
+@Disabled
 public class TensorFlow extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
-    private static final String LABEL_FIRST_ELEMENT = "Stone";
     private static final String LABEL_SECOND_ELEMENT = "Skystone";
 
     boolean posFound = false;
@@ -82,6 +82,7 @@ public class TensorFlow extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
+            CameraDevice.getInstance().setFlashTorchMode(true);
             while (opModeIsActive() && !posFound) {
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
@@ -91,24 +92,20 @@ public class TensorFlow extends LinearOpMode {
                         telemetry.addData("# Object Detected", updatedRecognitions.size());
 
                         // step through the list of recognitions and display boundary info.
-                        int i = 0;
                         for (Recognition recognition : updatedRecognitions) {
-                            if (recognition.getLabel() == "Skystone") {
+                            if (recognition.getLabel().equals("Skystone")) {
 
                                 telemetry.addData("Left", recognition.getLeft());
 
                                 if (recognition.getLeft() < 100) {
                                     pos = "Left";
-                                    posFound = true;
                                 } else if (recognition.getLeft() > 350) {
                                     pos = "Middle";
-                                    posFound = true;
                                 }
                             }
 
-                            if (posFound == false) {
+                            if (!posFound) {
                                 pos = "Right";
-                                posFound = true;
                             }
                         }
                         telemetry.update();
@@ -129,9 +126,6 @@ public class TensorFlow extends LinearOpMode {
         }
     }
 
-    /**
-     * Initialize the Vuforia localization engine.
-     */
     private void initVuforia() {
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -146,16 +140,12 @@ public class TensorFlow extends LinearOpMode {
 
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
-
-    /**
-     * Initialize the TensorFlow Object Detection engine.
-     */
     private void initTfod() {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
         tfodParameters.minimumConfidence = 0.8;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_SECOND_ELEMENT);
     }
 }
