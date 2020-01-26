@@ -33,10 +33,32 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
 
+
+    boolean accurateSpeed = false;
     double turnDivider = 1;
     double speedDivider = 1;
+    double legosTall = 0;
     boolean resetSlide = false;
     boolean recalibrate = false;
+
+    boolean linearSlideDone = true;
+
+
+    boolean clawOpen = true;
+    ElapsedTime clickTime = new ElapsedTime();
+
+
+    Servo odometryServo;
+    Servo capstone;
+
+
+    ElapsedTime timeBetweenCapDrop = new ElapsedTime();
+    boolean capdropperDown = false;
+
+    boolean flippedBack = false;
+    ElapsedTime timeForFlip = new ElapsedTime();
+
+    //ElapsedTime runTime = new ElapsedTime();
 
     DigitalChannel frontTouch;
     Servo foundationClampLeft;
@@ -81,6 +103,8 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
         grabServo = hardwareMap.get(Servo.class, "grabServo");
         capper = hardwareMap.get(Servo.class, "capstone");
+        odometryServo = hardwareMap.get(Servo.class, "odometryServo");
+
 
 
 
@@ -144,6 +168,10 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
         flipBackLeft.setPower(1);
         flipBackRight.setPower(1);
+
+        odometryServo.setPosition(1);
+        front_claw.setPosition(.71428);
+
     }
 
     @Override
@@ -151,35 +179,37 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
 
-        capper.setPosition(gamepad2.left_trigger);
 
 
-        telemetry.addData("servo", capper.getPosition());
-
-
-        telemetry.addData("left", Lencoder.getCurrentPosition());
-        telemetry.addData("right", Rencoder.getCurrentPosition());
-        telemetry.addData("horizontal", Hencoder.getCurrentPosition());
-        telemetry.update();
 
 
         /*
+        telemetry.addData("left", robot.Lencoder.getCurrentPosition());
+        telemetry.addData("right", robot.Rencoder.getCurrentPosition());
+        telemetry.addData("horizontal", robot.Hencoder.getCurrentPosition());
+        telemetry.update();
+
+
+
 
         telemetry.addLine("Left");
-        telemetry.addData("range", String.format("%.01f in", leftSideDist.getDistance(DistanceUnit.INCH)));
+        telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
         telemetry.update();
 
          */
 
 
-        if (gamepad2.dpad_up) {
-            while (!recalibrate) {
-                flipBackRight.setTargetPosition(300);
-                flipBackLeft.setTargetPosition(300);
+        //flip the linear slide up if it didn't flip in autonomous. Must hold the button for 2 seconds
+        ElapsedTime holdToReset = new ElapsedTime();
+        if (gamepad2.back) {
+
+            while (!recalibrate && gamepad2.back) {
+                flipBackRight.setTargetPosition(200);
+                flipBackLeft.setTargetPosition(200);
                 flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                flipBackRight.setPower(.3);
-                flipBackLeft.setPower(.3);
+                flipBackRight.setPower(.5);
+                flipBackLeft.setPower(.5);
 
                 if (!flipBackLeft.isBusy()) {
                     flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -188,6 +218,10 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
                 }
             }
 
+            flipBackLeft.setPower(0);
+            flipBackRight.setPower(0);
+        } else {
+            holdToReset.reset();
         }
 
 
@@ -195,20 +229,23 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
-        if (gamepad2.x) {
-            grabServo.setPosition(.75);
-        } else if (gamepad2.b) {
-            grabServo.setPosition(1);
+
+
+
+        /*
+        if (gamepad1.right_bumper) {
+            robot.driveEach(.1, -.4, -.1, .4);
+        } else if (gamepad1.left_bumper) {
+            robot.driveEach(-.1, .4, .1, -.4);
         }
 
-
-
+         */
 
 
         //slow speed
         if (gamepad1.right_bumper) {
             speedDivider = 4;
-            turnDivider = 4;
+            turnDivider = 2;
         } else if (gamepad1.left_bumper) {
             speedDivider = 1;
             turnDivider = 1;
@@ -221,15 +258,16 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         if (gamepad1.dpad_left || gamepad1.dpad_right) {
 
 
+
             if (gamepad1.dpad_left) {
-                driveSideways = -.5;
+                driveSideways = -1;
             } else if (gamepad1.dpad_right) {
-                driveSideways = .5;
+                driveSideways = 1;
             }
-            double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
-            double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider;
-            double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider;
-            double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider;
+            double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider ;
+            double lbpower = driveforward / speedDivider + turn / turnDivider - driveSideways / speedDivider ;
+            double rfpower = driveforward / speedDivider - turn / turnDivider - driveSideways / speedDivider ;
+            double rbpower = driveforward / speedDivider - turn / turnDivider + driveSideways / speedDivider ;
 
             driveEach(lfpower, lbpower, rfpower, rbpower);
         }
@@ -238,14 +276,14 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         if (gamepad1.dpad_up || gamepad1.dpad_down) {
 
 
+
             double direction = 1;
 
             if (gamepad1.dpad_down) {
                 direction = -1;
             }
 
-
-            driveEach((1 * direction) / speedDivider, (1 * direction) / speedDivider, (1 * direction) / speedDivider, (1 * direction) / speedDivider);
+            driveEach((1 * direction) / speedDivider , (1 * direction) / speedDivider , (1 * direction) / speedDivider , (1 * direction) / speedDivider );
         }
 
 
@@ -267,12 +305,19 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         //flip back
         //-----------------------------
         if (!(linear_slide.getCurrentPosition() > 5)) {
-            if (gamepad2.dpad_right) {
-                flipBackLeft.setTargetPosition(-300);
-                flipBackRight.setTargetPosition(-300);
-            } else {
-                flipBackLeft.setTargetPosition(0);
-                flipBackRight.setTargetPosition(0);
+            if (gamepad2.dpad_right && timeForFlip.seconds() > .5) {
+
+                if (flippedBack) {
+                    flipBackLeft.setTargetPosition(0);
+                    flipBackRight.setTargetPosition(0);
+                    flippedBack = false;
+                } else if (!flippedBack) {
+                    flipBackLeft.setTargetPosition(-300);
+                    flipBackRight.setTargetPosition(-300);
+                    flippedBack = true;
+                }
+
+                timeForFlip.reset();
             }
 
             flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -290,41 +335,107 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         //-----------------------------
         //claw
         //-----------------------------
-        front_claw.setPosition((1 - gamepad2.right_trigger) / 1.4);
+        //robot.front_claw.setPosition((1 - gamepad1.right_trigger) / 1.4);
+
+        if (gamepad1.right_trigger > 0 && clickTime.milliseconds() > 500) {
+            if (clawOpen) {
+                front_claw.setPosition(0);
+                clawOpen = false;
+            } else if (!clawOpen) {
+                front_claw.setPosition(.71428);
+                clawOpen = true;
+            }
+            clickTime.reset();
+        }
+
+
+        //drop capstone
+        if (timeBetweenCapDrop.seconds() > .5) {
+            if (gamepad2.y) {
+                if (capdropperDown) {
+                    capper.setPosition(.87);
+                    capdropperDown = false;
+                } else if (!capdropperDown) {
+                    capper.setPosition(.5);
+                    capdropperDown = true;
+                }
+                timeBetweenCapDrop.reset();
+            }
+        }
 
 
 
+        /*
+        if (timeBetweenPress.seconds() > .5) {
+            if (gamepad2.dpad_up) {
+                if (legosTall < 5) {
+                    legosTall += 1;
+                }
+                timeBetweenPress.reset();
+            } else if (gamepad2.dpad_down) {
+                if (legosTall > 0) {
+                    legosTall -= 1;
+                }
+                timeBetweenPress.reset();
+            }
+        }
 
+        telemetry.addData("Legos Tall", legosTall);
+        telemetry.update();
+
+
+        if (gamepad2.y || !linearSlideDone){
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            int targPos = (int) (legosTall * 800);
+            robot.linear_slide.setTargetPosition(targPos);
+
+            robot.linear_slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            if (robot.linear_slide.isBusy()) {
+                linearSlideDone = false;
+                robot.linear_slide.setPower(1);
+            }else if (!robot.linear_slide.isBusy()){
+                linearSlideDone = true;
+                robot.linear_slide.setPower(0);
+            }
+        }
+
+         */
 
 
         //-----------------------------
         //linear slide
         //-----------------------------
-        if (gamepad1.right_trigger > 0 && !resetSlide) {
+        if (gamepad2.right_trigger > 0 && !resetSlide) {
+
+            linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             if (linear_slide.getCurrentPosition() < 3888) {
-                linear_slide.setPower(gamepad1.right_trigger);
+                linear_slide.setPower(gamepad2.right_trigger);
 
             } else {
                 linear_slide.setPower(0);
             }
 
-        } else if (gamepad1.left_trigger > 0 && !resetSlide) {
+        } else if (gamepad2.left_trigger > 0 && !resetSlide) {
+
+            linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             if (linear_slide.getCurrentPosition() > 30) {
-                linear_slide.setPower(-gamepad1.left_trigger);
+                linear_slide.setPower(-gamepad2.left_trigger);
             } else {
                 linear_slide.setPower(0);
             }
 
         } else {
-            if (!resetSlide) {
+            if (resetSlide == false) {
                 linear_slide.setPower(0);
             }
         }
 
         //reset linear slide
-        if (gamepad1.x || resetSlide) {
+        if (gamepad2.x || resetSlide) {
             resetSlide = true;
             linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             linear_slide.setTargetPosition(0);
@@ -342,20 +453,27 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
             linear_slide.setPower(speed);
 
 
-            if (distance < 5 || !linear_slide.isBusy() || gamepad1.b) {
+            if (distance < 5 || !linear_slide.isBusy() || gamepad2.b) {
                 linear_slide.setPower(0);
                 resetSlide = false;
                 linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
         }
 
-        if (gamepad2.x) {
+        //fix flip back jiggle
+        if (gamepad2.dpad_left) {
             if (flipBackLeft.getCurrentPosition() < 10) {
                 flipBackRight.setPower(0);
                 flipBackLeft.setPower(0);
                 flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
+        }
+
+
+        if (gamepad2.a) {
+            speedDivider = 3;
+            turnDivider = 1.5;
         }
 
 

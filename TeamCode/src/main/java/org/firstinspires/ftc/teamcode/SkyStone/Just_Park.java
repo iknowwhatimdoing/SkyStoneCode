@@ -40,6 +40,13 @@ public class Just_Park extends LinearOpMode {
     String rfName = "right_front", rbName = "right_back", lfName = "left_front", lbName = "left_back";
     String verticalLeftEncoderName = lfName, verticalRightEncoderName = rfName, horizontalEncoderName = rbName;
 
+    DcMotor flipBackLeft;
+    DcMotor flipBackRight;
+
+    Servo capstone;
+
+
+
     //OdometryGlobalCoordinatePosition globalPositionUpdate;
 
 
@@ -64,6 +71,15 @@ public class Just_Park extends LinearOpMode {
         telemetry.addLine("Gyro: Done calibrating");
         telemetry.update();
 
+        flipBackLeft = hardwareMap.get(DcMotor.class, "left_flip");
+        flipBackRight = hardwareMap.get(DcMotor.class, "right_flip");
+
+        flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        capstone = hardwareMap.get(Servo.class, "capstone");
+
 
 
         telemetry.addData("Status", "Init Complete");
@@ -71,6 +87,22 @@ public class Just_Park extends LinearOpMode {
 
 
         waitForStart();
+
+        capstone.setPosition(.87);
+
+        //flip the linear slide down
+        flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipBackLeft.setTargetPosition(350);
+        flipBackRight.setTargetPosition(350);
+        flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        while (opModeIsActive() && flipBackLeft.isBusy()) {
+            flipBackLeft.setPower(.4);
+            flipBackRight.setPower(.4);
+        }
+        flipBackLeft.setPower(0);
+        flipBackRight.setPower(0);
 
 
         moveDistanceEncoder(7,.5);

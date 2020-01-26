@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
@@ -48,6 +49,9 @@ public class Quarry_Side_Red_Original extends LinearOpMode {
 
     public IntegratingGyroscope gyro;
     public ModernRoboticsI2cGyro modernRoboticsI2cGyro;
+
+    ElapsedTime timeout = new ElapsedTime();
+
 
 
     @Override
@@ -318,11 +322,20 @@ public class Quarry_Side_Red_Original extends LinearOpMode {
         left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        timeout.reset();
         modernRoboticsI2cGyro.resetZAxisIntegrator();
         double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-        while (opModeIsActive() && ((Math.abs(verticalRight.getCurrentPosition() - targetRight) >= 100) &&
+
+        //timeout is new
+        while (opModeIsActive()  && ((Math.abs(verticalRight.getCurrentPosition() - targetRight) >= 100) &&
                 (Math.abs(verticalLeft.getCurrentPosition() - targetLeft) >= 100))) {
 
+
+            while (opModeIsActive() && timeout.seconds() > 6){
+                driveAll(0);
+                telemetry.addLine("Robot: stuck");
+                telemetry.update();
+            }
 
             integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
 

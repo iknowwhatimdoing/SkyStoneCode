@@ -292,7 +292,7 @@ public class CompetitionTeleOp extends OpMode {
                     capstone.setPosition(.87);
                     capdropperDown = false;
                 } else if (!capdropperDown) {
-                    capstone.setPosition(.4);
+                    capstone.setPosition(.5);
                     capdropperDown = true;
                 }
                 timeBetweenCapDrop.reset();
