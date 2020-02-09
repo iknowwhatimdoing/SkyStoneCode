@@ -35,15 +35,15 @@ public class SkyStoneHardware {
     //public DcMotor skystoneArm;
 
     public Servo front_claw;
-    public Servo grabServo;
+    //public Servo grabServo;
 
-    /*
+
     public DistanceSensor rightSideDist;
     public DistanceSensor leftSideDist;
     public DistanceSensor frontLeftDist;
     public DistanceSensor frontRightDist;
 
-     */
+
 
 
     /* local OpMode members. */
@@ -92,17 +92,17 @@ public class SkyStoneHardware {
 
         front_claw = hwMap.get(Servo.class, "frontclaw");
 
-        grabServo = hwMap.get(Servo.class, "grabServo");
+        //grabServo = hwMap.get(Servo.class, "grabServo");
 
 
         // Initialize the sensors
-        /*
+
         rightSideDist = hwMap.get(DistanceSensor.class,"rightSideDist");
         leftSideDist = hwMap.get(DistanceSensor.class,"leftSideDist");
         frontLeftDist = hwMap.get(DistanceSensor.class,"frontLeftDist");
         frontRightDist = hwMap.get(DistanceSensor.class,"frontRightDist");
 
-         */
+
 
 
         right_front.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -113,9 +113,7 @@ public class SkyStoneHardware {
         right_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_back.setDirection(DcMotor.Direction.REVERSE);
         right_front.setDirection(DcMotor.Direction.REVERSE);
-        right_back.setDirection(DcMotor.Direction.REVERSE);
 
 
         Lencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -124,6 +122,7 @@ public class SkyStoneHardware {
         Lencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Rencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Hencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
 
 
         flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);

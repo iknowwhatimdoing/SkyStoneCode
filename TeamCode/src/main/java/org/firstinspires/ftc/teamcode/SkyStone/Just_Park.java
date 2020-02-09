@@ -31,6 +31,7 @@ import java.io.File;
 public class Just_Park extends LinearOpMode {
 
 
+    ElapsedTime timeout = new ElapsedTime();
 
     DcMotor right_front, right_back, left_front, left_back;    //Drive Motors
     DcMotor verticalLeft, verticalRight, horizontal;           //Odometry Wheels
@@ -43,7 +44,6 @@ public class Just_Park extends LinearOpMode {
     DcMotor flipBackLeft;
     DcMotor flipBackRight;
 
-    Servo capstone;
 
 
 
@@ -78,7 +78,6 @@ public class Just_Park extends LinearOpMode {
         flipBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        capstone = hardwareMap.get(Servo.class, "capstone");
 
 
 
@@ -88,16 +87,16 @@ public class Just_Park extends LinearOpMode {
 
         waitForStart();
 
-        capstone.setPosition(.87);
 
         //flip the linear slide down
+        timeout.reset();
         flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackLeft.setTargetPosition(350);
         flipBackRight.setTargetPosition(350);
         flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (opModeIsActive() && flipBackLeft.isBusy()) {
+        while (opModeIsActive() && flipBackLeft.isBusy() && timeout.seconds() < 2) {
             flipBackLeft.setPower(.4);
             flipBackRight.setPower(.4);
         }
@@ -188,115 +187,6 @@ public class Just_Park extends LinearOpMode {
 
 
     }
-
-    public void strafeEncoder(double inches, double speed) {
-        verticalLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        verticalRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        horizontal.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        double ticks = inches * COUNTS_PER_INCH;
-
-        double targetHorizontal = horizontal.getCurrentPosition() + ticks;
-
-        double power = speed;
-
-        if (inches < 0) {
-            power *= -1;
-        }
-        double adjust = 0;
-
-        right_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-        while (opModeIsActive() && (Math.abs(horizontal.getCurrentPosition() - targetHorizontal) >= 100)) {
-
-            integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-
-            if (integratedZ > 0) {
-                adjust = .04;
-            } else if (integratedZ < 0) {
-                adjust = -.04;
-            }
-
-
-            if (inches > 0 && horizontal.getCurrentPosition() >= (2 * (ticks / 3))) {
-                power = .25;
-            } else if (inches < 0 && horizontal.getCurrentPosition() <= (2 * (ticks / 3))) {
-                power = -.25;
-            }
-
-            // driveEach(leftPower, leftPower, rightPower, rightPower);
-            left_front.setPower(power + adjust);
-            right_front.setPower(-power - adjust);
-            left_back.setPower(-power + adjust);
-            right_back.setPower(power - adjust);
-        }
-        driveAll(0);
-
-
-    }
-
-
-    public void turnDegree(double degrees, double speed, double allowedError) {
-        modernRoboticsI2cGyro.resetZAxisIntegrator();
-        //double heading = modernRoboticsI2cGyro.getHeading();
-        double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-        //right is positive
-
-        //modernRoboticsI2cGyro.resetZAxisIntegrator();
-
-        double leftSpeed = speed;
-        double rightSpeed = -speed;
-
-        if (degrees > 0) {
-            leftSpeed *= -1;
-            rightSpeed *= -1;
-        }
-
-        right_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        right_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        while (opModeIsActive() && Math.abs(integratedZ - degrees) >= allowedError) {
-            integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-            telemetry.addData("angle", integratedZ);
-            telemetry.addData("speed", leftSpeed);
-            telemetry.addData("degrees", degrees);
-            telemetry.update();
-
-
-            if (Math.abs(integratedZ) > Math.abs((degrees * 0.7))){
-                leftSpeed = -.2 * Math.signum(degrees);
-                rightSpeed = .2 * Math.signum(degrees);
-            }else if (degrees > 0 && integratedZ > degrees){
-                break;
-            }else if(degrees<0 && integratedZ < degrees){
-                break;
-            }else{
-                leftSpeed = speed * -1 * Math.signum(degrees);
-                rightSpeed = speed * Math.signum(degrees);
-            }
-            driveEach(leftSpeed, leftSpeed, rightSpeed, rightSpeed);
-
-        }
-        driveAll(0);
-
-    }
-
-
-    public void driveEach(double lf, double lb, double rf, double rb) {
-        left_front.setPower(lf);
-        left_back.setPower(lb);
-
-        right_front.setPower(rf);
-        right_back.setPower(rb);
-    }
-
     public void driveAll(double power) {
         left_front.setPower(power);
         left_back.setPower(power);
@@ -341,9 +231,7 @@ public class Just_Park extends LinearOpMode {
         left_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_back.setDirection(DcMotorSimple.Direction.REVERSE);
         right_front.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_back.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.addData("Status", "Hardware Map Init Complete");
         telemetry.update();

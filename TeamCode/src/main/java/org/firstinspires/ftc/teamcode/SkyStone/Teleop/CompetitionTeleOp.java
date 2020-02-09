@@ -50,7 +50,7 @@ public class CompetitionTeleOp extends OpMode {
 
 
     Servo odometryServo;
-    Servo capstone;
+    //Servo capstone;
 
 
     ElapsedTime timeBetweenCapDrop = new ElapsedTime();
@@ -59,6 +59,8 @@ public class CompetitionTeleOp extends OpMode {
     boolean flippedBack = false;
     ElapsedTime timeForFlip = new ElapsedTime();
 
+    DcMotor sideArm;
+    Servo clampL, clampR, sideGrabber;
     //ElapsedTime runTime = new ElapsedTime();
 
 
@@ -66,8 +68,13 @@ public class CompetitionTeleOp extends OpMode {
     public void init() {
         robot.init(hardwareMap, false);
         odometryServo = hardwareMap.get(Servo.class, "odometryServo");
+        sideArm = hardwareMap.get(DcMotor.class, "skystoneArm");
+        clampL = hardwareMap.get(Servo.class, "clampL");
+        clampR = hardwareMap.get(Servo.class, "clampR");
+        sideGrabber = hardwareMap.get(Servo.class, "sideGrabber");
 
-        capstone = hardwareMap.get(Servo.class, "capstone");
+
+        //capstone = hardwareMap.get(Servo.class, "capstone");
 
 
     }
@@ -75,6 +82,8 @@ public class CompetitionTeleOp extends OpMode {
     @Override
     public void start() {
 
+        sideArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        sideArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.linear_slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.linear_slide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -104,21 +113,27 @@ public class CompetitionTeleOp extends OpMode {
 
 
 
+        clampL.setPosition(gamepad1.left_trigger);    //.6 up,    1  down
+        clampR.setPosition(1-gamepad1.left_trigger);    //1 up,    .8 down
+        sideGrabber.setPosition(gamepad2.left_stick_x);    //1 open,    .43 closed
 
-        /*
+        //-150 down     0 in
+
+        telemetry.addData("clampL", clampL.getPosition());
+        telemetry.addData("clampR", clampR.getPosition());
+        telemetry.addData("sideGrabber", sideGrabber.getPosition());
+        telemetry.addData("pos", sideArm.getCurrentPosition());
+        //telemetry.update();
         telemetry.addData("left", robot.Lencoder.getCurrentPosition());
         telemetry.addData("right", robot.Rencoder.getCurrentPosition());
         telemetry.addData("horizontal", robot.Hencoder.getCurrentPosition());
-        telemetry.update();
-
-
-
-
+        //telemetry.update();
         telemetry.addLine("Left");
         telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
+        telemetry.addLine("Right");
+        telemetry.addData("range", String.format("%.01f in", robot.rightSideDist.getDistance(DistanceUnit.INCH)));
         telemetry.update();
 
-         */
 
 
         //flip the linear slide up if it didn't flip in autonomous. Must hold the button for 2 seconds
@@ -285,6 +300,7 @@ public class CompetitionTeleOp extends OpMode {
         }
 
 
+        /*
         //drop capstone
         if (timeBetweenCapDrop.seconds() > .5) {
             if (gamepad2.y) {
@@ -298,6 +314,8 @@ public class CompetitionTeleOp extends OpMode {
                 timeBetweenCapDrop.reset();
             }
         }
+
+         */
 
 
 

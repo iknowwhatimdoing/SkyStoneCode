@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 
+import android.provider.ContactsContract;
 import android.util.Log;
-
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.DogeCVDetector;
 import com.disnodeteam.dogecv.filters.CbColorFilter;
@@ -11,17 +11,17 @@ import com.disnodeteam.dogecv.filters.LeviColorFilter;
 import com.disnodeteam.dogecv.scoring.MaxAreaScorer;
 import com.disnodeteam.dogecv.scoring.PerfectAreaScorer;
 import com.disnodeteam.dogecv.scoring.RatioScorer;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,34 +34,25 @@ public class OpenCV extends DogeCVDetector {
     public DogeCVColorFilter yellowFilter = new LeviColorFilter(LeviColorFilter.ColorPreset.YELLOW, 70); //Default Yellow blackFilter
 
     public RatioScorer ratioScorer = new RatioScorer(1.25, 3); // Used to find the short face of the stone
-    public MaxAreaScorer maxAreaScorer = new MaxAreaScorer(0.01);                    // Used to find largest objects
-    public PerfectAreaScorer perfectAreaScorer = new PerfectAreaScorer(5000, 0.05); // Used to find objects near a tuned area value
+    public MaxAreaScorer maxAreaScorer = new MaxAreaScorer( 0.5);                    // Used to find largest objects
+    public PerfectAreaScorer perfectAreaScorer = new PerfectAreaScorer(5000,0.05); // Used to find objects near a tuned area value
+
 
 
     // Results of the detector
     private Point screenPosition = new Point(); // Screen position of the mineral
     private Rect foundRect = new Rect(); // Found rect
 
-
-    private Point matchLoc;
-
-
     private Mat rawImage = new Mat();
     private Mat workingMat = new Mat();
     private Mat displayMat = new Mat();
     private Mat blackMask = new Mat();
     private Mat yellowMask = new Mat();
-    private Mat hierarchy = new Mat();
-    private Mat workTemp = new Mat();
-    private Mat templateImg = Imgcodecs.imread("C:\\Users\\Alek\\Documents\\GitCode\\SkyStone\\TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\SkyStone\\Tests\\Images\\size.PNG");
-    private Mat edge = new Mat();
-
-    private Mat matchRes = new Mat();
+    private Mat hierarchy  = new Mat();
 
     public Point getScreenPosition() {
         return screenPosition;
     }
-
 
     public Rect foundRectangle() {
         return foundRect;
@@ -69,7 +60,7 @@ public class OpenCV extends DogeCVDetector {
 
 
     public OpenCV() {
-        detectorName = "Skystone Detector";
+        detectorName = "my Skystone Detector";
     }
 
     @Override
@@ -78,65 +69,90 @@ public class OpenCV extends DogeCVDetector {
         input.copyTo(workingMat);
         input.copyTo(displayMat);
         input.copyTo(blackMask);
-        templateImg.copyTo(workTemp);
+
+
+        Imgproc.GaussianBlur(workingMat,workingMat,new Size(15,15),0);
+
+
+        yellowFilter.process(workingMat.clone(), yellowMask);
+
+        List<MatOfPoint> contoursYellow = new ArrayList<>();
+
+        Imgproc.findContours(yellowMask, contoursYellow, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.drawContours(displayMat,contoursYellow,-1,new Scalar(255,30,30),2);
 
 
 
 
+        // Current result
+        Rect bestRect = foundRect;
+        double bestDifference = Double.MAX_VALUE; // MAX_VALUE since less difference = better
 
-        int y = 100;
-        int x = 20;
-        int h = 100;
-        int w = 850;
+        // Loop through the contours and score them, searching for the best result
+        for(MatOfPoint cont : contoursYellow){
+            double score = calculateScore(cont); // Get the difference score using the scoring API
 
-
-        //Mat crop = workingMat[y: y+h, x: x+w];
-        Mat uncropped = workingMat;
-        Rect roi = new Rect(x, y, w, h);
-        Mat cropped = new Mat(uncropped, roi);
-
-        Mat image = new Mat();
-
-        Imgproc.cvtColor(cropped, image, Imgproc.COLOR_BGR2HSV);
-
-        Scalar list = new Scalar(0,0,0);
+            // Get bounding rect of contour
+            Rect rect = Imgproc.boundingRect(cont);
 
 
-        Mat mask = new Mat();
-        ArrayList<MatOfPoint> bluecnts = new ArrayList<MatOfPoint>();
-        Core.inRange(image,list,list, mask);
+            Imgproc.rectangle(displayMat, rect.tl(), rect.br(), new Scalar(0,0,255),2); // Draw rect
 
-        Mat newMask = new Mat();
-        mask.copyTo(newMask);
-        Imgproc.findContours(newMask, bluecnts, newMask, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        /*
-        if (bluecnts.size() > 0){
-            ArrayList blue_area = new ArrayList();
-            blue_area = max(bluecnts, Imgproc.contourArea(newMask));
-            (xg,yg,wg,hg) = Imgproc.boundingRect(s)
+            // If the result is better then the previously tracked one, set this rect as the new best
+            if(score < bestDifference){
+                bestDifference = score;
+                bestRect = rect;
+            }
         }
 
-         */
+        Imgproc.rectangle(blackMask, bestRect.tl(), bestRect.br(), new Scalar(255,255,255), 1, Imgproc.LINE_4, 0);
+        blackFilter.process(workingMat.clone(), blackMask);
+        List<MatOfPoint> contoursBlack = new ArrayList<>();
 
+        Imgproc.findContours(blackMask, contoursBlack, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.drawContours(displayMat,contoursBlack,-1,new Scalar(40,40,40),2);
 
+        for(MatOfPoint cont : contoursBlack){
+            double score = calculateScore(cont); // Get the difference score using the scoring API
 
+            // Get bounding rect of contour
+            Rect rect = Imgproc.boundingRect(cont);
+            Imgproc.rectangle(displayMat, rect.tl(), rect.br(), new Scalar(0,0,255),2); // Draw rect
 
+            // If the result is better then the previously tracked one, set this rect as the new best
+            if(score < bestDifference){
+                bestDifference = score;
+                bestRect = rect;
+            }
+        }
+        if(bestRect != null) {
+            // Show chosen result
+            Imgproc.rectangle(displayMat, bestRect.tl(), bestRect.br(), new Scalar(255,0,0),4);
+            Imgproc.putText(displayMat, "Chosen", bestRect.tl(),0,1,new Scalar(255,255,255));
 
+            screenPosition = new Point(bestRect.x, bestRect.y);
+            foundRect = bestRect;
+            found = true;
+        }
+        else {
+            found = false;
+        }
 
+        switch (stageToRenderToViewport) {
+            case THRESHOLD: {
+                //blackMask.copyTo(blackMask,mask);
+                Imgproc.cvtColor(blackMask, blackMask, Imgproc.COLOR_GRAY2BGR);
 
-
-
-
-
-
-        return edge;
-
-
-    }
-
-    public Point getResult() {
-        return matchLoc;
+                return blackMask;
+            }
+            case RAW_IMAGE: {
+                return rawImage;
+            }
+            default: {
+                return displayMat;
+            }
+        }
     }
 
     @Override
@@ -144,11 +160,11 @@ public class OpenCV extends DogeCVDetector {
         addScorer(ratioScorer);
 
         // Add diffrent scorers depending on the selected mode
-        if (areaScoringMethod == DogeCV.AreaScoringMethod.MAX_AREA) {
+        if(areaScoringMethod == DogeCV.AreaScoringMethod.MAX_AREA){
             addScorer(maxAreaScorer);
         }
 
-        if (areaScoringMethod == DogeCV.AreaScoringMethod.PERFECT_AREA) {
+        if (areaScoringMethod == DogeCV.AreaScoringMethod.PERFECT_AREA){
             addScorer(perfectAreaScorer);
         }
     }

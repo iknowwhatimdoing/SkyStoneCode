@@ -34,7 +34,7 @@ public class DogeCVscan2 extends LinearOpMode {
 
 
 
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
 
 
 
@@ -42,7 +42,9 @@ public class DogeCVscan2 extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-            telemetry.addData("Left Point Pos", skystoneDetector.getScreenPosition().x);
+
+            telemetry.addData("x", skystoneDetector.getScreenPosition().x);
+            telemetry.addData("y", skystoneDetector.getScreenPosition().y);
             telemetry.update();
         }
 

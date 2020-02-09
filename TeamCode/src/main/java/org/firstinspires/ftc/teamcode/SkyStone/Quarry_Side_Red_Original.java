@@ -18,7 +18,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 
 
-@Autonomous(name = "Quarry Side (Red)")
+@Autonomous(name = "Quarry Side Red (Original)")
 public class Quarry_Side_Red_Original extends LinearOpMode {
 
 

@@ -49,11 +49,14 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
     Servo odometryServo;
-    Servo capstone;
 
 
-    ElapsedTime timeBetweenCapDrop = new ElapsedTime();
-    boolean capdropperDown = false;
+    //ElapsedTime timeBetweenCapDrop = new ElapsedTime();
+    //boolean capdropperDown = false;
+
+    boolean clampsGrabbed= false;
+    ElapsedTime timeToClose = new ElapsedTime();
+
 
     boolean flippedBack = false;
     ElapsedTime timeForFlip = new ElapsedTime();
@@ -63,7 +66,9 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
     DigitalChannel frontTouch;
     Servo foundationClampLeft;
     Servo foundationClampRight;
-    Servo capper;
+    //Servo capper;
+
+
 
 
 
@@ -71,15 +76,14 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
     public DcMotor right_front;
     public DcMotor left_back;
     public DcMotor right_back;
-    public DcMotor Lencoder;
-    public DcMotor Rencoder;
-    public DcMotor Hencoder;
+
     public DcMotor linear_slide;
     public DcMotor flipBackRight;
     public DcMotor flipBackLeft;
 
+
     public Servo front_claw;
-    public Servo grabServo;
+    public Servo sideGrabber;
 
 
 
@@ -89,9 +93,7 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         right_front = hardwareMap.get(DcMotor.class, "right_front");
         left_back = hardwareMap.get(DcMotor.class, "left_back");
         right_back = hardwareMap.get(DcMotor.class, "right_back");
-        Lencoder = hardwareMap.get(DcMotor.class, "left_front");
-        Rencoder = hardwareMap.get(DcMotor.class, "right_front");
-        Hencoder = hardwareMap.get(DcMotor.class, "right_back");
+
 
         flipBackLeft = hardwareMap.get(DcMotor.class, "left_flip");
         flipBackRight = hardwareMap.get(DcMotor.class, "right_flip");
@@ -101,8 +103,8 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
         front_claw = hardwareMap.get(Servo.class, "frontclaw");
 
-        grabServo = hardwareMap.get(Servo.class, "grabServo");
-        capper = hardwareMap.get(Servo.class, "capstone");
+        sideGrabber = hardwareMap.get(Servo.class, "sideGrabber");
+        //capper = hardwareMap.get(Servo.class, "capstone");
         odometryServo = hardwareMap.get(Servo.class, "odometryServo");
 
 
@@ -116,17 +118,12 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         right_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_front.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         left_back.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        left_back.setDirection(DcMotor.Direction.REVERSE);
+
         right_front.setDirection(DcMotor.Direction.REVERSE);
-        right_back.setDirection(DcMotor.Direction.REVERSE);
 
 
-        Lencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Rencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Hencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Lencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Rencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Hencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+
 
 
         flipBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -144,8 +141,8 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         frontTouch.setMode(DigitalChannel.Mode.INPUT);
 
 
-        foundationClampLeft = hardwareMap.get(Servo.class, "foundationClampLeft");
-        foundationClampRight = hardwareMap.get(Servo.class, "foundationClampRight");
+        foundationClampLeft = hardwareMap.get(Servo.class, "clampL");
+        foundationClampRight = hardwareMap.get(Servo.class, "clampR");
 
 
 
@@ -172,37 +169,17 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         odometryServo.setPosition(1);
         front_claw.setPosition(.71428);
 
+        foundationClampLeft.setPosition(.6);
+        foundationClampRight.setPosition(1);
+
     }
 
     @Override
     public void loop() {
 
 
-
-
-
-
-
-        /*
-        telemetry.addData("left", robot.Lencoder.getCurrentPosition());
-        telemetry.addData("right", robot.Rencoder.getCurrentPosition());
-        telemetry.addData("horizontal", robot.Hencoder.getCurrentPosition());
-        telemetry.update();
-
-
-
-
-        telemetry.addLine("Left");
-        telemetry.addData("range", String.format("%.01f in", robot.leftSideDist.getDistance(DistanceUnit.INCH)));
-        telemetry.update();
-
-         */
-
-
-        //flip the linear slide up if it didn't flip in autonomous. Must hold the button for 2 seconds
-        ElapsedTime holdToReset = new ElapsedTime();
+        //flip the linear slide up if it didn't flip in autonomous.
         if (gamepad2.back) {
-
             while (!recalibrate && gamepad2.back) {
                 flipBackRight.setTargetPosition(200);
                 flipBackLeft.setTargetPosition(200);
@@ -220,11 +197,10 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
             flipBackLeft.setPower(0);
             flipBackRight.setPower(0);
-        } else {
-            holdToReset.reset();
         }
 
 
+        //get the joystick values
         double driveforward = -gamepad1.left_stick_y;
         double driveSideways = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
@@ -232,14 +208,29 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
 
-        /*
-        if (gamepad1.right_bumper) {
-            robot.driveEach(.1, -.4, -.1, .4);
-        } else if (gamepad1.left_bumper) {
-            robot.driveEach(-.1, .4, .1, -.4);
+
+
+        //close the foundation clamps
+        if (timeToClose.seconds() > .5) {
+            if (gamepad2.y) {
+                if (clampsGrabbed) {
+                    foundationClampLeft.setPosition(.6);
+                    foundationClampRight.setPosition(1);
+                    speedDivider = 1;
+                    turnDivider = 1;
+                    clampsGrabbed = false;
+                } else if (!clampsGrabbed) {
+                    foundationClampLeft.setPosition(1);
+                    foundationClampRight.setPosition(.8);
+                    speedDivider = 3;
+                    turnDivider = 1.5;
+                    clampsGrabbed = true;
+                }
+                timeToClose.reset();
+            }
         }
 
-         */
+
 
 
         //slow speed
@@ -253,11 +244,11 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
         //-----------------------------
-        //strafing
+        //Dpad controls
         //-----------------------------
+
+        //strafing
         if (gamepad1.dpad_left || gamepad1.dpad_right) {
-
-
 
             if (gamepad1.dpad_left) {
                 driveSideways = -1;
@@ -272,24 +263,19 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
             driveEach(lfpower, lbpower, rfpower, rbpower);
         }
 
-
+        //driving
         if (gamepad1.dpad_up || gamepad1.dpad_down) {
-
-
-
             double direction = 1;
-
             if (gamepad1.dpad_down) {
                 direction = -1;
             }
-
             driveEach((1 * direction) / speedDivider , (1 * direction) / speedDivider , (1 * direction) / speedDivider , (1 * direction) / speedDivider );
         }
 
 
 
         //-----------------------------
-        //driving
+        //joystick controls
         //-----------------------------
         if (!gamepad1.dpad_left && !gamepad1.dpad_right && !gamepad1.dpad_down && !gamepad1.dpad_up) {
             double lfpower = driveforward / speedDivider + turn / turnDivider + driveSideways / speedDivider;
@@ -312,11 +298,10 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
                     flipBackRight.setTargetPosition(0);
                     flippedBack = false;
                 } else if (!flippedBack) {
-                    flipBackLeft.setTargetPosition(-300);
-                    flipBackRight.setTargetPosition(-300);
+                    flipBackLeft.setTargetPosition(-250);
+                    flipBackRight.setTargetPosition(-250);
                     flippedBack = true;
                 }
-
                 timeForFlip.reset();
             }
 
@@ -335,8 +320,6 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         //-----------------------------
         //claw
         //-----------------------------
-        //robot.front_claw.setPosition((1 - gamepad1.right_trigger) / 1.4);
-
         if (gamepad1.right_trigger > 0 && clickTime.milliseconds() > 500) {
             if (clawOpen) {
                 front_claw.setPosition(0);
@@ -349,6 +332,7 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         }
 
 
+        /*
         //drop capstone
         if (timeBetweenCapDrop.seconds() > .5) {
             if (gamepad2.y) {
@@ -363,45 +347,9 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
             }
         }
 
-
-
-        /*
-        if (timeBetweenPress.seconds() > .5) {
-            if (gamepad2.dpad_up) {
-                if (legosTall < 5) {
-                    legosTall += 1;
-                }
-                timeBetweenPress.reset();
-            } else if (gamepad2.dpad_down) {
-                if (legosTall > 0) {
-                    legosTall -= 1;
-                }
-                timeBetweenPress.reset();
-            }
-        }
-
-        telemetry.addData("Legos Tall", legosTall);
-        telemetry.update();
-
-
-        if (gamepad2.y || !linearSlideDone){
-            robot.linear_slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            int targPos = (int) (legosTall * 800);
-            robot.linear_slide.setTargetPosition(targPos);
-
-            robot.linear_slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            if (robot.linear_slide.isBusy()) {
-                linearSlideDone = false;
-                robot.linear_slide.setPower(1);
-            }else if (!robot.linear_slide.isBusy()){
-                linearSlideDone = true;
-                robot.linear_slide.setPower(0);
-            }
-        }
-
          */
+
+
 
 
         //-----------------------------

@@ -52,7 +52,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 
-@Autonomous(name = "Quarry Side")
+@Autonomous(name = "Quarry Side(original)")
 public class Quarry_Side extends LinearOpMode {
 
     boolean posFound = false;
@@ -97,6 +97,8 @@ public class Quarry_Side extends LinearOpMode {
 
     Servo odometryServo;
     Servo capstone;
+
+    Servo clampL, clampR;
 
 
     Servo frontClaw;
@@ -214,6 +216,9 @@ public class Quarry_Side extends LinearOpMode {
         }
 
 
+        clampL = hardwareMap.get(Servo.class, "clampL");
+        clampR = hardwareMap.get(Servo.class, "clampR");
+
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
 
@@ -225,6 +230,8 @@ public class Quarry_Side extends LinearOpMode {
 
         //make sure the claw and foundation Clamp is up
         frontClaw.setPosition(.7);
+        clampR.setPosition(1);
+        clampL.setPosition(.6);
 
 
         //strafeEncoder(4.5,.4);
@@ -889,14 +896,13 @@ public class Quarry_Side extends LinearOpMode {
         horizontal.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
+
         right_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         right_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_back.setDirection(DcMotorSimple.Direction.REVERSE);
         right_front.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_back.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.addData("Status", "Hardware Map Init Complete");
         telemetry.update();

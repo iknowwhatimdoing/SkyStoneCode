@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinate
  * Created by Sarthak on 10/4/2019.
  */
 @TeleOp(name = "My Odometry OpMode")
-@Disabled
+//@Disabled
 public class TestPositionDrive extends LinearOpMode {
     //Drive motors
     DcMotor right_front, right_back, left_front, left_back;
@@ -42,12 +42,14 @@ public class TestPositionDrive extends LinearOpMode {
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 
-        globalPositionUpdate.reverseRightEncoder();
+        //globalPositionUpdate.reverseRightEncoder();
         globalPositionUpdate.reverseNormalEncoder();
 
 
 
-        goToPosition(3,3,.5,0,10);
+        goToPosition(3,3,.5,0,5);
+        sleep(2000);
+        goToPosition(0,0,.5,0,5);
 
 
         while (opModeIsActive()) {
@@ -140,9 +142,7 @@ public class TestPositionDrive extends LinearOpMode {
         left_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_back.setDirection(DcMotorSimple.Direction.REVERSE);
         right_front.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_back.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.addData("Status", "Hardware Map Init Complete");
         telemetry.update();
