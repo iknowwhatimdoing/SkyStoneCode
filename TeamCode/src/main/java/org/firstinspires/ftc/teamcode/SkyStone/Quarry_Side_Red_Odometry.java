@@ -14,7 +14,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.SkyStone.Odometry.OdometryGlobalCoordinatePosition;
 import org.firstinspires.ftc.teamcode.SkyStone.Tests.OpenCV;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -22,8 +21,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 
 
-@Autonomous(name = "Quarry Side (odometry)")
-public class Quarry_Side_Odometry extends LinearOpMode {
+@Autonomous(name = "Quarry Side Red(odometry)")
+public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
     //movement offsets for the pattern
     public double patternOffsetX = 0;
@@ -126,7 +125,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
         String pattern = scan();
-        // A: 99,   B: 167,  C: 236
+        // A: 236,   B: 167,  C: 99
 
         telemetry.addData("Pattern", pattern);
         telemetry.update();
@@ -149,13 +148,13 @@ public class Quarry_Side_Odometry extends LinearOpMode {
                 break;
         }
 
-        goToPosition(23,0 + patternOffsetY,.7,0,5);
+        goToPosition(-23,0 + patternOffsetY,.7,0,5);
 
 
         //lower the side claw
         timeout.reset();
         sideGrabber.setPosition(1);
-        sideArm.setTargetPosition(-150);
+        sideArm.setTargetPosition(150);
         sideArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         while(sideArm.isBusy() && opModeIsActive() && timeout.seconds() < 2) {
             sideArm.setPower(.4);
@@ -165,7 +164,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
 
-        goToPosition(26,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH),.5,0,5);
+        goToPosition(-26,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH),.5,0,5);
 
         //close the claw on the skystone. Wait for it to close
         sideGrabber.setPosition(SIDE_CLAW_CLOSED);
@@ -195,7 +194,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
         //move to the other side (near the foundation)
-        goToPosition(22, 92,.85,0,6);
+        goToPosition(-22, 92,.85,0,6);
 
         //push into the wall to reset position
         timeout.reset();
@@ -229,7 +228,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
                 break;
         }
 
-        goToPosition(23, 0 + patternOffsetY, .85,0,5);
+        goToPosition(-23, 0 + patternOffsetY, .85,0,5);
 
         //flip the claw down
         sideArmControl("out", .4);
@@ -254,7 +253,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
         //move back to the foundation side
-        goToPosition(22, 84, .85, 0, 5);
+        goToPosition(-22, 84, .85, 0, 5);
 
 
         //lower the arm to place the stone
@@ -279,11 +278,11 @@ public class Quarry_Side_Odometry extends LinearOpMode {
         switch (pattern){
             case "A":
                 //back up to align with the second stone in the row
-                goToPosition(23,-3,.85,0,5);
+                goToPosition(-23,-3,.85,0,5);
                 break;
             default:
                 //back up to align with the first stone in the row
-                goToPosition(23,1,.85,0,5);
+                goToPosition(-23,1,.85,0,5);
                 break;
         }
 
@@ -312,7 +311,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
         //move back to the foundation side
-        goToPosition(22,73,.85,0,5);
+        goToPosition(-22,73,.85,0,5);
 
 
         //lower the arm to place the stone
@@ -334,7 +333,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
          */
 
         //back up from the foundation to turn
-        goToPosition(18,73,.6,90,5);
+        goToPosition(-18,73,.6,-90,5);
 
         /*
         goToPosition(18,73,.6,0,5);
@@ -367,7 +366,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
          */
 
         //back up, turn, and move at the same time
-        goToPosition((globalPositionUpdate.returnXCoordinate() * COUNTS_PER_INCH) - 9, (globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 14, .5, 0, 10 );
+        goToPosition((globalPositionUpdate.returnXCoordinate() * COUNTS_PER_INCH) + 9, (globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 14, .5, 0, 10 );
 
 
 
@@ -386,7 +385,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
 
-        goToPosition(22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH),.5,0,5);
+        goToPosition(-22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH),.5,0,5);
 
 
         //push the foundation into the zone
@@ -405,7 +404,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
 
 
         //back up
-        goToPosition(22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 10,.85,90,10);
+        goToPosition(-22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 10,.85,-90,10);
 
 
         //lower the main arm
@@ -419,7 +418,7 @@ public class Quarry_Side_Odometry extends LinearOpMode {
         sleep(300);
 
         //move to park
-        goToPosition(22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 10,.85,90,10);
+        goToPosition(-22,(globalPositionUpdate.returnYCoordinate() * COUNTS_PER_INCH) - 10,.85,-90,10);
 
 
     }
@@ -744,9 +743,9 @@ public class Quarry_Side_Odometry extends LinearOpMode {
         telemetry.addData("y", openCV.getScreenPosition().y);
         telemetry.update();
 
-        double distFromA = Math.abs(99- openCV.getScreenPosition().x);
+        double distFromA = Math.abs(236- openCV.getScreenPosition().x);
         double distFromB = Math.abs(167 - openCV.getScreenPosition().x);
-        double distFromC = Math.abs(236 - openCV.getScreenPosition().x);
+        double distFromC = Math.abs(99 - openCV.getScreenPosition().x);
 
         if (distFromA < distFromB){
             if (distFromA < distFromC){

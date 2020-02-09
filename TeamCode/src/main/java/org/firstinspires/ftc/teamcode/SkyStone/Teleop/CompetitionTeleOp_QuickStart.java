@@ -243,6 +243,15 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         }
 
 
+        //if the claw is closed and the linear slide goes high enough, go slow speed.
+        if (!clawOpen && linear_slide.getCurrentPosition() > 100){
+            speedDivider = 4;
+            turnDivider = 2;
+        }
+
+
+
+
         //-----------------------------
         //Dpad controls
         //-----------------------------
@@ -435,7 +444,6 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
         right_front.setPower(rf);
         right_back.setPower(rb);
     }
-
     public void driveAll(double power) {
         left_front.setPower(power);
         left_back.setPower(power);

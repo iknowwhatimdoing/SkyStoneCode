@@ -1,6 +1,6 @@
 //Copyright (c) 2019 FIRST. All rights reserved.
 
-package org.firstinspires.ftc.teamcode.SkyStone;
+package org.firstinspires.ftc.teamcode.SkyStone.Final_Autonomous;
 
 import com.disnodeteam.dogecv.detectors.skystone.SkystoneDetector;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
