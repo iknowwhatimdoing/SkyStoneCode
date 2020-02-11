@@ -37,7 +37,6 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
     boolean accurateSpeed = false;
     double turnDivider = 1;
     double speedDivider = 1;
-    double legosTall = 0;
     boolean resetSlide = false;
     boolean recalibrate = false;
 
@@ -51,8 +50,7 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
     Servo odometryServo;
 
 
-    //ElapsedTime timeBetweenCapDrop = new ElapsedTime();
-    //boolean capdropperDown = false;
+
 
     boolean clampsGrabbed= false;
     ElapsedTime timeToClose = new ElapsedTime();
@@ -340,23 +338,6 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
             clickTime.reset();
         }
 
-
-        /*
-        //drop capstone
-        if (timeBetweenCapDrop.seconds() > .5) {
-            if (gamepad2.y) {
-                if (capdropperDown) {
-                    capper.setPosition(.87);
-                    capdropperDown = false;
-                } else if (!capdropperDown) {
-                    capper.setPosition(.5);
-                    capdropperDown = true;
-                }
-                timeBetweenCapDrop.reset();
-            }
-        }
-
-         */
 
 
 
