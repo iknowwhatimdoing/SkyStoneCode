@@ -53,6 +53,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 
 @Autonomous(name = "Quarry Side(original)")
+@Disabled
 public class Quarry_Side extends LinearOpMode {
 
     boolean posFound = false;

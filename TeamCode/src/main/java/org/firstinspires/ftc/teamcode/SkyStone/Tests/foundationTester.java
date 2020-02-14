@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,6 +21,7 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 
 @Autonomous(name = "Test foundation movement")
+@Disabled
 public class foundationTester extends LinearOpMode {
 
     //movement offsets for the pattern

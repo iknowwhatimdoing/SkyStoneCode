@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.SkyStone.Tests;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +13,7 @@ import org.opencv.core.Mat;
 
 
 @Autonomous(name = "Test Program")
+@Disabled
 public class Tests extends LinearOpMode {
 
     final double COUNTS_PER_INCH = 309.023;
