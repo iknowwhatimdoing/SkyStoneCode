@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -31,8 +32,8 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
     public double patternOffsetY = 0;
 
     //constants
-    private static final double SIDE_CLAW_OPEN = .6;
-    private static final double SIDE_CLAW_CLOSED = .2;
+    private static final double SIDE_CLAW_OPEN = 0;
+    private static final double SIDE_CLAW_CLOSED = .6;
     final double COUNTS_PER_INCH = 307.699557;
 
     //OpenCV initialization
@@ -43,7 +44,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
     ElapsedTime timeout = new ElapsedTime();
 
     //distance sensors if needed
-    //public DistanceSensor rightSideDist;
+    public DistanceSensor rightSideDist;
     //public DistanceSensor leftSideDist;
     //public DistanceSensor frontLeftDist;
     //public DistanceSensor frontRightDist;
@@ -75,6 +76,8 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
     //front touch sensor
     DigitalChannel frontTouch;
 
+    double voltageOffset;
+
 
     //gyro
     public IntegratingGyroscope gyro;
@@ -90,18 +93,43 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         flipBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flipBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+
+
+        voltageOffset = 0;
+
+        telemetry.addLine("Select Voltage");
+        telemetry.update();
+
+
+        ElapsedTime timer = new ElapsedTime();
+        while((!gamepad2.dpad_up || !gamepad2.dpad_down) && timer.seconds() < 3){
+            if (gamepad2.dpad_up){
+                voltageOffset = 1.5;
+                telemetry.addData("voltage", "high");
+
+            }else if (gamepad2.dpad_down){
+                voltageOffset = -1;
+                telemetry.addData("voltage", "low");
+
+            }else{
+                telemetry.addData("voltage", "medium");
+            }
+            telemetry.update();
+        }
+
+
+
+
+
         sleep(1500);
+        telemetry.addData("voltage Offset", voltageOffset);
         telemetry.addData("Status", "Init Complete");
         telemetry.update();
 
 
 
-
-
-
-
-
         waitForStart();
+
 
         //lower the middle odometry wheel
         odometryServo.setPosition(.5);
@@ -113,7 +141,6 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 
-        //globalPositionUpdate.reverseRightEncoder();
         globalPositionUpdate.reverseNormalEncoder();
 
 
@@ -131,7 +158,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
         telemetry.addData("Pattern", pattern);
         telemetry.update();
-        phoneCam.stopStreaming();
+        //phoneCam.stopStreaming();
         //sleep(200);
 
 
@@ -140,7 +167,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         //move a little depending on where the skystone is
         switch (pattern){
             case "A":
-                patternOffsetY = 10;
+                patternOffsetY = 12;
                 break;
             case "B":
                 patternOffsetY = 3;
@@ -150,7 +177,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
                 break;
         }
 
-        goToPosition(-23.5,0 + patternOffsetY,.8,0,6.5);
+        goToPosition(-24,0 + patternOffsetY,.7,0,6.5 + voltageOffset);
 
 
         //lower the side claw
@@ -159,7 +186,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
 
-        goToPosition(-32,0 + patternOffsetY,.8,0,6.5);
+        goToPosition(-33,0 + patternOffsetY,.6,0,6.5+ voltageOffset);
 
         sleep(100);
         //close the claw on the skystone. Wait for it to close
@@ -169,7 +196,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         //flip the linear slide down
-        mainArmControl("out", .6);
+        mainArmControl("hover", .6);
 
         sleep(300);
 
@@ -182,7 +209,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         //strafe over and move at the same time
-        goToPosition(-22,25,.85,0,3);
+        goToPosition(-22,25,.85,0,3+ voltageOffset);
 
 
 
@@ -200,7 +227,13 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         //move to the other side (near the foundation)
-        goToPosition(-25, 82,1,0,4);
+        //goToPosition(-25, 82,1,0,4+ voltageOffset);
+
+        //move to the other side (near the foundation)
+        goToPosition(-26.75, 85,.85,0,5 + voltageOffset);
+        //goToPosition(-26.75,85,.5,0,3 + voltageOffset);
+
+
 
 
         //lower the arm to place the stone
@@ -208,14 +241,16 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
         //open the claw
         sideGrabber.setPosition(SIDE_CLAW_OPEN);
-        sleep(200);
-
-        goToPosition(-20, 70,.85,0,4);
-
+        sleep(500);
 
 
         //flip the arm back into the robot
         sideArmControl("in", .15);
+
+        goToPosition(-20, 75,.85,0,4+ voltageOffset);
+
+
+
 
 
 
@@ -224,23 +259,23 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         //move back to the stones
         switch (pattern){
             case "A":
-                patternOffsetY = -12;
+                patternOffsetY = -13;
                 break;
             case "B":
-                patternOffsetY = -17;
+                patternOffsetY = -21;
                 break;
             case "C":
-                patternOffsetY = -24;
+                patternOffsetY = 10;
                 break;
         }
 
-        goToPosition(-16,0+patternOffsetY,.9,0,4);
+        goToPosition(-18,0+patternOffsetY,.85,0,4+ voltageOffset);
         //goToPosition(20, 0 + patternOffsetY, .85,0,5);
 
         //flip the claw down
         sideArmControl("out", .2);
 
-        goToPosition(-28, 0 + patternOffsetY, .85,0,5);
+        goToPosition(-30, 0 + patternOffsetY, .55,0,5+ voltageOffset);
         //strafeEncoder(5,.5);
 
 
@@ -252,7 +287,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         //flip the claw in
         sideArmControl("in",.2);
 
-        goToPosition(-20, 0, .85,0,3);
+        goToPosition(-20, 0, .85,0,3+ voltageOffset);
 
 
 
@@ -268,7 +303,13 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         //move back to the foundation side
-        goToPosition(-25, 73, 1, 0, 5);
+        goToPosition(-26.75, 74,.85,0,4.25 + voltageOffset);
+        globalPositionUpdate.stop();
+
+        strafeEncoder(-1.6, .8);
+        //goToPosition(-26.75,73,.5,0,2 + voltageOffset);
+
+
 
 
         //lower the arm to place the stone
@@ -276,11 +317,12 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
         //open the claw
         sideGrabber.setPosition(SIDE_CLAW_OPEN);
-        sleep(200);
+        sleep(500);
 
 
 
 
+        sideArmControl("in", .2);
 
 
 
@@ -292,13 +334,12 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
          */
 
         //back up from the foundation to turn
-        goToPosition(-18,80,.9,0,5);
+        strafeEncoder(5,.8);
+        //goToPosition(-15,80,.9,0,5+ voltageOffset);
 
-        globalPositionUpdate.stop();
 
 
         //flip the arm back into the robot
-        sideArmControl("in", .2);
 
         /*
         goToPosition(18,73,.6,0,5);
@@ -317,7 +358,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         ElapsedTime allowedMoveTime = new ElapsedTime();
-        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 5) {
+        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 1.5) {
             moveWithoutEndGoal(.3);
         }
         driveAll(.1);
@@ -331,12 +372,12 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
         //back up with the foundation
-        moveDistanceEncoder(-5,.9);
+        moveDistanceEncoder(-5,.8);
 
         //turn a bit with the foundation, back up, and finish the turn
-        foundationMovement(-45, 1,.2);
+        foundationMovement(-20, 1,.2);
         moveDistanceEncoder(-5,.9);
-        foundationMovement(-45,1,.2);
+        foundationMovement(-70,1,.2);
 
 
 
@@ -347,25 +388,33 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
 
 
 
-
-        strafeEncoder(-12,.8);
-
-
-        /*
         //push the foundation into the zone
         ElapsedTime moveTime = new ElapsedTime();
-        while (opModeIsActive() && moveTime.seconds() < .4) {
-            driveAll(.35);
+        while (opModeIsActive() && moveTime.seconds() < .55) {
+            driveAll(.4);
         }
         driveAll(0);
 
-         */
+
+        moveDistanceEncoder(-5,.8);
 
 
 
 
+        double alignError = rightSideDist.getDistance(DistanceUnit.INCH) - 24;
 
-        moveDistanceEncoder(-15,1);
+        telemetry.addData("error", alignError);
+        telemetry.update();
+
+        if (Math.abs(alignError) > 4){
+            alignError = -2;
+        }
+        //goToPosition(21,70,.8,0,5);
+        strafeEncoder(alignError,.8);
+
+
+
+        moveDistanceEncoder(-22,1);
 
 
 
@@ -377,13 +426,9 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         //lower the main arm
         mainArmControl("out", .6);
 
-        //drop the capstone
-        frontClaw.setPosition(1);
 
         //bring the side arm into the robot
         sideArmControl("in", .6);
-
-        moveDistanceEncoder(-10,1);
 
 
         //globalPositionUpdate.stop();
@@ -746,9 +791,11 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
                 sideArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 timeout.reset();
                 while (opModeIsActive() && sideArm.isBusy() && timeout.seconds() < .65){
-                    sideArm.setPower(.2);
-                    if (timeout.seconds() > .2) {
+                    if (timeout.seconds() > .25) {
+                        sideArm.setPower(.2);
                         sideGrabber.setPosition(SIDE_CLAW_CLOSED);
+                    }else{
+                        sideArm.setPower(.5);
                     }
                 }
                 sideArm.setPower(0);
@@ -771,8 +818,8 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
                 flipBackRight.setPower(0);
                 break;
             case "hover":
-                flipBackLeft.setTargetPosition(200);
-                flipBackRight.setTargetPosition(200);
+                flipBackLeft.setTargetPosition(150);
+                flipBackRight.setTargetPosition(150);
                 flipBackRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 flipBackLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 flipBackLeft.setPower(speed);
@@ -800,9 +847,9 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         telemetry.addData("y", openCV.getScreenPosition().y);
         telemetry.update();
 
-        double distFromA = Math.abs(236- openCV.getScreenPosition().x);
-        double distFromB = Math.abs(167 - openCV.getScreenPosition().x);
-        double distFromC = Math.abs(99 - openCV.getScreenPosition().x);
+        double distFromA = Math.abs(99- openCV.getScreenPosition().x);
+        double distFromB = Math.abs(150 - openCV.getScreenPosition().x);
+        double distFromC = Math.abs(236 - openCV.getScreenPosition().x);
 
         if (distFromA < distFromB){
             if (distFromA < distFromC){
@@ -894,7 +941,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         flipBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        //rightSideDist = hardwareMap.get(DistanceSensor.class, "rightSideDist");
+        rightSideDist = hardwareMap.get(DistanceSensor.class, "rightSideDist");
         //leftSideDist = hardwareMap.get(DistanceSensor.class, "leftSideDist");
         //frontLeftDist = hardwareMap.get(DistanceSensor.class, "frontLeftDist");
         //frontRightDist = hardwareMap.get(DistanceSensor.class, "frontRightDist");
@@ -918,7 +965,7 @@ public class Quarry_Side_Red_Odometry extends LinearOpMode {
         phoneCam.openCameraDevice();
         openCV = new OpenCV();
         phoneCam.setPipeline(openCV);
-        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        phoneCam.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_RIGHT);
 
     }
 

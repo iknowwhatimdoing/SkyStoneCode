@@ -39,6 +39,8 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
     double speedDivider = 1;
     boolean resetSlide = false;
     boolean recalibrate = false;
+    boolean done = false;
+
 
     boolean linearSlideDone = true;
 
@@ -242,9 +244,14 @@ public class CompetitionTeleOp_QuickStart extends OpMode {
 
 
         //if the claw is closed and the linear slide goes high enough, go slow speed.
-        if (!clawOpen && linear_slide.getCurrentPosition() > 100){
-            speedDivider = 4;
-            turnDivider = 2;
+        if (!clawOpen && linear_slide.getCurrentPosition() > 200){
+            if (!done) {
+                speedDivider = 4;
+                turnDivider = 2;
+                done = true;
+            }
+        }else{
+            done = false;
         }
 
 
