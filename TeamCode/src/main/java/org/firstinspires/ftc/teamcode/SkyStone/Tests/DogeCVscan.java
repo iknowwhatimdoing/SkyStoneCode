@@ -17,7 +17,7 @@ import java.util.Locale;
 
 
 @TeleOp(name = "DogeCV Skystone test")
-//@Disabled
+@Disabled
 public class DogeCVscan extends LinearOpMode {
 
     private OpenCvCamera phoneCam;

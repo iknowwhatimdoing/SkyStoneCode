@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.SkyStone;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -23,6 +24,7 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 
 @Autonomous(name = "Quarry Side Red (test)")
+@Disabled
 public class Quarry_Side_Red_Odometry_TestUpdate extends LinearOpMode {
 
     //movement offsets for the pattern
@@ -30,7 +32,7 @@ public class Quarry_Side_Red_Odometry_TestUpdate extends LinearOpMode {
     public double patternOffsetY = 0;
 
     //constants
-    private static final double SIDE_CLAW_OPEN = 0;
+    private static final double SIDE_CLAW_OPEN = .15;
     private static final double SIDE_CLAW_CLOSED = .6;
     final double COUNTS_PER_INCH = 307.699557;
 

@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.SkyStone;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -23,6 +24,7 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 
 @Autonomous(name = "Quarry Side (test)")
+@Disabled
 public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
 
     //movement offsets for the pattern
@@ -31,7 +33,7 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
 
     //constants
     private static final double SIDE_CLAW_OPEN = .6;
-    private static final double SIDE_CLAW_CLOSED = .2;
+    private static final double SIDE_CLAW_CLOSED = .15;
     final double COUNTS_PER_INCH = 307.699557;
 
     //OpenCV initialization
@@ -136,7 +138,7 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
         telemetry.addData("Pattern", pattern);
         telemetry.update();
         //phoneCam.stopStreaming();
-        sleep(2000);
+        //sleep(2000);
 
 
 
@@ -221,10 +223,10 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
         //move back to the stones
         switch (pattern){
             case "A":
-                patternOffsetY = -13;
+                patternOffsetY = -15;
                 break;
             case "B":
-                patternOffsetY = -21;
+                patternOffsetY = -23;
                 break;
             case "C":
                 patternOffsetY = 10;
@@ -272,6 +274,8 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
         //lower the arm to place the stone
         sideArmControl("dropping", .2);
 
+        sleep(200);
+
         //open the claw
         sideGrabber.setPosition(SIDE_CLAW_OPEN);
         sleep(500);
@@ -309,11 +313,11 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
         //sideArmControl("hover", .6);
         mainArmControl("in", .6);
 
-        strafeEncoder(-5,.8);
+        strafeEncoder(-4.5,.6);
 
 
         ElapsedTime allowedMoveTime = new ElapsedTime();
-        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 1.5) {
+        while (opModeIsActive() && frontTouch.getState() && allowedMoveTime.seconds() < 1.3) {
             moveWithoutEndGoal(.3);
         }
         driveAll(.1);
@@ -352,10 +356,11 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
         moveDistanceEncoder(-5,.8);
 
 
+        double moveSpeed = .8;
         double alignError = 25 - leftSideDist.getDistance(DistanceUnit.INCH);
 
         if (Math.abs(alignError) > 4){
-            alignError = 2;
+            moveSpeed = .4;
         }
 
 
@@ -378,7 +383,7 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
 
 
         //goToPosition(21,55,.8,0,8);
-        moveDistanceEncoder(-22,.8);
+        moveDistanceEncoder(-22,moveSpeed);
 
 
         //globalPositionUpdate.stop();
@@ -446,7 +451,11 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
 
 
             if (distance < (savedDistance/3)){
-                power=.5;
+                if (savedDistance < 5){
+                    power = .3;
+                }else {
+                    power = .5;
+                }
             }
 
 
@@ -585,7 +594,8 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
 
         modernRoboticsI2cGyro.resetZAxisIntegrator();
         double integratedZ = modernRoboticsI2cGyro.getIntegratedZValue();
-        while (opModeIsActive() && (Math.abs(-horizontal.getCurrentPosition() - targetHorizontal) >= 100)) {
+        timeout.reset();
+        while (opModeIsActive() && timeout.seconds() < 2 && (Math.abs(-horizontal.getCurrentPosition() - targetHorizontal) >= 100)) {
 
 
             if (!opModeIsActive() || isStopRequested()){
@@ -758,7 +768,7 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
                 while (opModeIsActive() && sideArm.isBusy() && timeout.seconds() < .8){
                     double error = Math.abs(sideArm.getCurrentPosition() - sideArm.getTargetPosition());
                     double power = error / 250;
-                    sideArm.setPower(power);
+                    sideArm.setPower(Range.clip(power,-.4,.4));
                 }
                 sideArm.setPower(0);
                 //PID(sideArm);
@@ -773,6 +783,18 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
                     //double power = error / 240;
 
 
+                    sideArm.setPower(.2);
+                    if (timeout.seconds() > .2) {
+                        sideGrabber.setPosition(SIDE_CLAW_CLOSED);
+                    }
+                }
+                sideArm.setPower(0);
+                break;
+            case "pickup":
+                sideArm.setTargetPosition(30);
+                sideArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                timeout.reset();
+                while (opModeIsActive() && sideArm.isBusy() && timeout.seconds() < .65){
                     sideArm.setPower(.2);
                     if (timeout.seconds() > .2) {
                         sideGrabber.setPosition(SIDE_CLAW_CLOSED);
@@ -818,15 +840,7 @@ public class Quarry_Side_Odometry_TestUpdate extends LinearOpMode {
                 flipBackLeft.setPower(0);
                 flipBackRight.setPower(0);
                 break;
-            case "pickup":
-                sideArm.setTargetPosition(30);
-                sideArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                timeout.reset();
-                while (opModeIsActive() && sideArm.isBusy() && timeout.seconds() < .65){
-                    sideArm.setPower(.2);
-                }
-                sideArm.setPower(0);
-                break;
+
         }
     }
 
